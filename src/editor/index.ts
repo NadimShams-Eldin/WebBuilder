@@ -1,7 +1,15 @@
 export { ALLOWED_CSS_PROPS, CSS_GROUPS, filterStyle, isAllowedCssProp, toKebabCase } from './cssWhitelist.ts'
 export { createId, createNode, isContainerType, resetNodeIdSeq } from './createNode.ts'
 export { createPage, createProject, DEFAULT_THEME } from './createProject.ts'
+export { createDemoProject } from './demoProject.ts'
 export { renderCss, renderHtml, renderPageHtml } from './render.ts'
+export {
+  DEVICE_WIDTHS,
+  getActivePage,
+  useEditorStore,
+  type Device,
+  type EditorState,
+} from './store.ts'
 export type {
   AnimationEffect,
   AnimationTrigger,

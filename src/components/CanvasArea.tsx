@@ -1,25 +1,59 @@
+import { Canvas } from './Canvas'
+import { DEVICE_WIDTHS, useEditorStore, type Device } from '../editor/store.ts'
+
+const DEVICES: { id: Device; label: string }[] = [
+  { id: 'desktop', label: 'حاسوب' },
+  { id: 'tablet', label: 'لوحي' },
+  { id: 'phone', label: 'هاتف' },
+]
+
 export function CanvasArea() {
+  const device = useEditorStore((s) => s.device)
+  const zoom = useEditorStore((s) => s.zoom)
+  const setDevice = useEditorStore((s) => s.setDevice)
+  const setZoom = useEditorStore((s) => s.setZoom)
+
   return (
     <main className="flex h-full flex-1 flex-col bg-neutral-100">
       <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-2">
         <div className="flex items-center gap-2 text-xs text-neutral-500">
-          <button className="rounded border border-neutral-200 px-2 py-1">حاسوب</button>
-          <button className="rounded px-2 py-1 hover:bg-neutral-50">لوحي</button>
-          <button className="rounded px-2 py-1 hover:bg-neutral-50">هاتف</button>
+          {DEVICES.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setDevice(item.id)}
+              className={
+                device === item.id
+                  ? 'rounded border border-neutral-200 bg-neutral-100 px-2 py-1 text-neutral-900'
+                  : 'rounded px-2 py-1 hover:bg-neutral-50'
+              }
+            >
+              {item.label}
+            </button>
+          ))}
+          <span className="text-neutral-400">{DEVICE_WIDTHS[device]}px</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-neutral-500">
-          <button className="rounded border border-neutral-200 px-2 py-1">−</button>
-          <span>100%</span>
-          <button className="rounded border border-neutral-200 px-2 py-1">+</button>
+          <button
+            type="button"
+            className="rounded border border-neutral-200 px-2 py-1"
+            onClick={() => setZoom(zoom - 0.1)}
+          >
+            −
+          </button>
+          <span>{Math.round(zoom * 100)}%</span>
+          <button
+            type="button"
+            className="rounded border border-neutral-200 px-2 py-1"
+            onClick={() => setZoom(zoom + 0.1)}
+          >
+            +
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center overflow-auto p-8">
-        <div className="flex h-full w-full max-w-3xl items-center justify-center rounded-lg bg-white shadow-sm">
-          <p className="text-sm text-neutral-400">
-            الكانفا فارغة - ابدأ بإضافة العناصر من لوحة القطع
-          </p>
-        </div>
+      <div className="flex flex-1 justify-center overflow-auto p-8">
+        <Canvas />
       </div>
     </main>
   )
