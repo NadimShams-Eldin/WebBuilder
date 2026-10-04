@@ -11,7 +11,7 @@ export function createId(prefix = 'n'): string {
   return `${prefix}_${nodeSeq.toString(36)}`
 }
 
-const TYPE_NAMES: Record<NodeType, string> = {
+export const NODE_TYPE_LABELS: Record<NodeType, string> = {
   container: 'حاوية',
   flex: 'صندوق مرن',
   grid: 'شبكة',
@@ -37,7 +37,7 @@ export function createNode(type: NodeType, id?: string): Node {
   const node: Node = {
     id: id ?? createId(),
     type,
-    name: TYPE_NAMES[type],
+    name: NODE_TYPE_LABELS[type],
     props: {},
     style: {},
     animation: null,
