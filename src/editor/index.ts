@@ -12,6 +12,9 @@ export {
   findNode,
   getAncestorIds,
   resolveInsertTarget,
+  updateNode,
+  updateNodeInProject,
+  type NodePatch,
 } from './tree.ts'
 export { createPage, createProject, DEFAULT_THEME } from './createProject.ts'
 export { createDemoProject } from './demoProject.ts'

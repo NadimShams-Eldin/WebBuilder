@@ -1,5 +1,5 @@
 import { createNode, isContainerType } from './createNode.ts'
-import type { Node, NodeType, Page, Project } from './types.ts'
+import type { Node, NodeProps, NodeStyle, NodeType, Page, Project } from './types.ts'
 
 export function findNode(node: Node, id: string): Node | null {
   if (node.id === id) return node
@@ -97,6 +97,53 @@ export function addNodeToPage(page: Page, selectedId: string | null, type: NodeT
   const root = insertChild(page.root, target.parentId, node, target.index)
   if (!root) return null
   return { page: { ...page, root }, node }
+}
+
+export type NodePatch = {
+  name?: string
+  props?: NodeProps
+  style?: NodeStyle
+}
+
+export function updateNode(root: Node, id: string, patch: NodePatch): Node | null {
+  let found = false
+
+  const walk = (node: Node): Node => {
+    if (node.id === id) {
+      found = true
+      return {
+        ...node,
+        name: patch.name ?? node.name,
+        props: patch.props ? { ...node.props, ...patch.props } : node.props,
+        style: patch.style ? { ...node.style, ...patch.style } : node.style,
+      }
+    }
+    let changed = false
+    const children = node.children.map((item) => {
+      const next = walk(item)
+      if (next !== item) changed = true
+      return next
+    })
+    return changed ? { ...node, children } : node
+  }
+
+  const next = walk(root)
+  return found ? next : null
+}
+
+export function updateNodeInProject(
+  project: Project,
+  id: string,
+  patch: NodePatch,
+): Project | null {
+  const page = project.pages[0]
+  if (!page) return null
+  const root = updateNode(page.root, id, patch)
+  if (!root) return null
+  return {
+    ...project,
+    pages: project.pages.map((item) => (item.id === page.id ? { ...page, root } : item)),
+  }
 }
 
 export function addNodeToProject(

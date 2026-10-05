@@ -2,7 +2,13 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { createNode } from './createNode.ts'
 import { createProject } from './createProject.ts'
-import { addNodeToPage, findNode, getAncestorIds, resolveInsertTarget } from './tree.ts'
+import {
+  addNodeToPage,
+  findNode,
+  getAncestorIds,
+  resolveInsertTarget,
+  updateNode,
+} from './tree.ts'
 
 describe('tree insert', () => {
   it('adds a node into the root container', () => {
@@ -47,6 +53,24 @@ describe('tree insert', () => {
     const page = { id: 'p', name: 'صفحة', slug: 'index', root }
     const result = addNodeToPage(page, null, 'text')
     assert.equal(result, null)
+  })
+})
+
+describe('updateNode', () => {
+  it('patches props and style on the matching node', () => {
+    const heading = createNode('heading', 'h')
+    const root = createNode('container', 'root')
+    root.children = [heading]
+    const next = updateNode(root, 'h', {
+      props: { text: 'جديد' },
+      style: { color: '#ff0000' },
+    })
+    assert.ok(next)
+    const updated = findNode(next, 'h')
+    assert.ok(updated)
+    assert.equal(updated.props.text, 'جديد')
+    assert.equal(updated.style.color, '#ff0000')
+    assert.equal(findNode(root, 'h')?.props.text, 'عنوان')
   })
 })
 

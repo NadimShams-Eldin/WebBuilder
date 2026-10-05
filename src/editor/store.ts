@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createDemoProject } from './demoProject.ts'
-import { addNodeToProject } from './tree.ts'
+import { addNodeToProject, updateNodeInProject, type NodePatch } from './tree.ts'
 import type { NodeType, Project } from './types.ts'
 
 export type Device = 'desktop' | 'tablet' | 'phone'
@@ -26,6 +26,7 @@ export type EditorState = {
   setZoom: (zoom: number) => void
   setRightTab: (tab: RightTab) => void
   addBlock: (type: NodeType) => boolean
+  updateSelected: (patch: NodePatch) => void
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -53,6 +54,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       lastInsertError: null,
     })
     return true
+  },
+  updateSelected: (patch) => {
+    const { project, selectedId } = get()
+    if (!selectedId) return
+    const next = updateNodeInProject(project, selectedId, patch)
+    if (next) set({ project: next })
   },
 }))
 
