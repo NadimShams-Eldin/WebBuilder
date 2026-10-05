@@ -3,7 +3,7 @@ import { describe, it, beforeEach } from 'node:test'
 import { filterStyle, isAllowedCssProp, toKebabCase } from './cssWhitelist.ts'
 import { createNode, isContainerType, resetNodeIdSeq } from './createNode.ts'
 import { createProject } from './createProject.ts'
-import { renderCss, renderHtml } from './render.ts'
+import { renderCss, renderHtml, renderPageHtml } from './render.ts'
 import type { Node, Project } from './types.ts'
 
 function tree(): Node {
@@ -226,6 +226,16 @@ describe('renderCss', () => {
     assert.ok(css.includes('.q-h1 { font-size: 2rem; font-weight: 700; color: #111111; }'))
     assert.ok(css.includes('.q-btn { color: #ffffff; background-color: #2563eb; }'))
     assert.equal(css.includes('onclick'), false)
+  })
+})
+
+describe('renderPageHtml', () => {
+  it('includes the editor script only in editor mode', () => {
+    const html = renderPageHtml(projectWith(tree()), tree(), true)
+    const exported = renderPageHtml(projectWith(tree()), tree(), false)
+    assert.ok(html.includes('qitma-canvas'))
+    assert.equal(exported.includes('qitma-canvas'), false)
+    assert.ok(exported.includes('<h1 class="q-h1"'))
   })
 })
 

@@ -11,16 +11,20 @@ export const DEVICE_WIDTHS: Record<Device, number> = {
   phone: 390,
 }
 
+export type RightTab = 'blocks' | 'outline'
+
 export type EditorState = {
   project: Project
   selectedId: string | null
   device: Device
   zoom: number
   lastInsertError: string | null
+  rightTab: RightTab
   setProject: (project: Project) => void
   setSelectedId: (id: string | null) => void
   setDevice: (device: Device) => void
   setZoom: (zoom: number) => void
+  setRightTab: (tab: RightTab) => void
   addBlock: (type: NodeType) => boolean
 }
 
@@ -30,10 +34,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   device: 'desktop',
   zoom: 1,
   lastInsertError: null,
+  rightTab: 'blocks',
   setProject: (project) => set({ project }),
   setSelectedId: (selectedId) => set({ selectedId, lastInsertError: null }),
   setDevice: (device) => set({ device }),
   setZoom: (zoom) => set({ zoom: Math.min(1.5, Math.max(0.5, zoom)) }),
+  setRightTab: (rightTab) => set({ rightTab }),
   addBlock: (type) => {
     const { project, selectedId } = get()
     const result = addNodeToProject(project, selectedId, type)

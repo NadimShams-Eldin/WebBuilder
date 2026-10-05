@@ -6,7 +6,13 @@ export {
   NODE_TYPE_LABELS,
   resetNodeIdSeq,
 } from './createNode.ts'
-export { addNodeToPage, addNodeToProject, findNode, resolveInsertTarget } from './tree.ts'
+export {
+  addNodeToPage,
+  addNodeToProject,
+  findNode,
+  getAncestorIds,
+  resolveInsertTarget,
+} from './tree.ts'
 export { createPage, createProject, DEFAULT_THEME } from './createProject.ts'
 export { createDemoProject } from './demoProject.ts'
 export { renderCss, renderHtml, renderPageHtml } from './render.ts'
@@ -16,6 +22,7 @@ export {
   useEditorStore,
   type Device,
   type EditorState,
+  type RightTab,
 } from './store.ts'
 export type {
   AnimationEffect,

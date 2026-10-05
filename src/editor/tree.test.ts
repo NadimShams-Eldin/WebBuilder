@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { createNode } from './createNode.ts'
 import { createProject } from './createProject.ts'
-import { addNodeToPage, findNode, resolveInsertTarget } from './tree.ts'
+import { addNodeToPage, findNode, getAncestorIds, resolveInsertTarget } from './tree.ts'
 
 describe('tree insert', () => {
   it('adds a node into the root container', () => {
@@ -47,5 +47,18 @@ describe('tree insert', () => {
     const page = { id: 'p', name: 'صفحة', slug: 'index', root }
     const result = addNodeToPage(page, null, 'text')
     assert.equal(result, null)
+  })
+})
+
+describe('getAncestorIds', () => {
+  it('returns the path of parent ids to a nested node', () => {
+    const text = createNode('text', 't')
+    const flex = createNode('flex', 'f')
+    flex.children = [text]
+    const root = createNode('container', 'r')
+    root.children = [flex]
+    assert.deepEqual(getAncestorIds(root, 't'), ['r', 'f'])
+    assert.deepEqual(getAncestorIds(root, 'r'), [])
+    assert.deepEqual(getAncestorIds(root, 'missing'), [])
   })
 })

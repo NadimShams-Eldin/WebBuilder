@@ -19,6 +19,24 @@ export function findParent(node: Node, id: string): Node | null {
   return null
 }
 
+export function getAncestorIds(root: Node, id: string): string[] {
+  const path: string[] = []
+
+  const walk = (node: Node, acc: string[]): boolean => {
+    if (node.id === id) {
+      path.push(...acc)
+      return true
+    }
+    for (const child of node.children) {
+      if (walk(child, [...acc, node.id])) return true
+    }
+    return false
+  }
+
+  walk(root, [])
+  return path
+}
+
 export type InsertTarget = {
   parentId: string
   index: number

@@ -131,7 +131,21 @@ export function renderCss(project: Project): string {
   return lines.join('\n')
 }
 
-export function renderPageHtml(project: Project, node: Node): string {
+const EDITOR_SCRIPT = `<script>
+(function () {
+  document.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    var target = event.target;
+    var el = target && target.closest ? target.closest('[data-qid]') : null;
+    var id = el ? el.getAttribute('data-qid') : null;
+    window.parent.postMessage({ source: 'qitma-canvas', type: 'select', id: id }, '*');
+  }, true);
+  document.addEventListener('submit', function (event) { event.preventDefault(); }, true);
+})();
+</script>`
+
+export function renderPageHtml(project: Project, node: Node, editor = false): string {
   return `<!DOCTYPE html>
 <html lang="ar" dir="${project.theme.direction}">
 <head>
@@ -144,6 +158,7 @@ ${renderCss(project)}
 </head>
 <body>
 ${renderHtml(node)}
+${editor ? EDITOR_SCRIPT : ''}
 </body>
 </html>`
 }
