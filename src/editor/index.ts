@@ -9,13 +9,33 @@ export {
 export {
   addNodeToPage,
   addNodeToProject,
+  canDrop,
   findNode,
+  findParent,
   getAncestorIds,
+  insertAtDrop,
+  insertAtDropInProject,
+  moveNode,
+  moveNodeInProject,
+  resolveDropInsert,
   resolveInsertTarget,
   updateNode,
   updateNodeInProject,
+  type DropIntent,
+  type DropPlacement,
+  type InsertTarget,
   type NodePatch,
 } from './tree.ts'
+export {
+  axisFromComputed,
+  clientToIframePoint,
+  hitTestCanvas,
+  indicatorBox,
+  placementFromPoint,
+  type DropAxis,
+  type IndicatorBox,
+  type RectLike,
+} from './drop.ts'
 export { createPage, createProject, DEFAULT_THEME } from './createProject.ts'
 export { createDemoProject } from './demoProject.ts'
 export { renderCss, renderHtml, renderPageHtml } from './render.ts'

@@ -4,8 +4,11 @@ import { createNode } from './createNode.ts'
 import { createProject } from './createProject.ts'
 import {
   addNodeToPage,
+  canDrop,
   findNode,
   getAncestorIds,
+  insertAtDrop,
+  moveNode,
   resolveInsertTarget,
   updateNode,
 } from './tree.ts'
@@ -84,5 +87,64 @@ describe('getAncestorIds', () => {
     assert.deepEqual(getAncestorIds(root, 't'), ['r', 'f'])
     assert.deepEqual(getAncestorIds(root, 'r'), [])
     assert.deepEqual(getAncestorIds(root, 'missing'), [])
+  })
+})
+
+describe('drop and move', () => {
+  function sample() {
+    const a = createNode('heading', 'a')
+    const b = createNode('text', 'b')
+    const inner = createNode('flex', 'inner')
+    inner.children = [b]
+    const root = createNode('container', 'root')
+    root.children = [a, inner]
+    return { root, a, b, inner }
+  }
+
+  it('inserts before, after, and inside a container', () => {
+    const { root } = sample()
+    const before = insertAtDrop(root, createNode('button', 'x'), { targetId: 'a', placement: 'before' })
+    assert.ok(before)
+    assert.deepEqual(before.children.map((n) => n.id), ['x', 'a', 'inner'])
+
+    const after = insertAtDrop(root, createNode('button', 'y'), { targetId: 'a', placement: 'after' })
+    assert.ok(after)
+    assert.deepEqual(after.children.map((n) => n.id), ['a', 'y', 'inner'])
+
+    const inside = insertAtDrop(root, createNode('button', 'z'), { targetId: 'inner', placement: 'inside' })
+    assert.ok(inside)
+    const nextInner = findNode(inside, 'inner')
+    assert.ok(nextInner)
+    assert.deepEqual(nextInner.children.map((n) => n.id), ['b', 'z'])
+  })
+
+  it('rejects inside a leaf and before/after the root', () => {
+    const { root } = sample()
+    assert.equal(canDrop(root, { targetId: 'a', placement: 'inside' }), false)
+    assert.equal(insertAtDrop(root, createNode('text', 'n'), { targetId: 'a', placement: 'inside' }), null)
+    assert.equal(canDrop(root, { targetId: 'root', placement: 'before' }), false)
+    assert.equal(canDrop(root, { targetId: 'root', placement: 'inside' }), true)
+  })
+
+  it('reorders siblings and moves a node into a container', () => {
+    const { root } = sample()
+    const reordered = moveNode(root, 'inner', { targetId: 'a', placement: 'before' })
+    assert.ok(reordered)
+    assert.deepEqual(reordered.children.map((n) => n.id), ['inner', 'a'])
+
+    const nested = moveNode(root, 'a', { targetId: 'inner', placement: 'inside' })
+    assert.ok(nested)
+    assert.equal(nested.children.length, 1)
+    assert.equal(nested.children[0].id, 'inner')
+    const nextInner = findNode(nested, 'inner')
+    assert.ok(nextInner)
+    assert.deepEqual(nextInner.children.map((n) => n.id), ['b', 'a'])
+  })
+
+  it('rejects dropping a node onto itself or into its descendant', () => {
+    const { root } = sample()
+    assert.equal(canDrop(root, { targetId: 'a', placement: 'after' }, 'a'), false)
+    assert.equal(moveNode(root, 'inner', { targetId: 'b', placement: 'after' }), null)
+    assert.equal(canDrop(root, { targetId: 'b', placement: 'inside' }, 'inner'), false)
   })
 })

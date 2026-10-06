@@ -163,3 +163,124 @@ export function addNodeToProject(
     node: result.node,
   }
 }
+
+export type DropPlacement = 'before' | 'after' | 'inside'
+
+export type DropIntent = {
+  targetId: string
+  placement: DropPlacement
+  axis?: 'vertical' | 'horizontal'
+  rtl?: boolean
+}
+
+export function isAncestorOf(root: Node, ancestorId: string, nodeId: string): boolean {
+  return getAncestorIds(root, nodeId).includes(ancestorId)
+}
+
+export function canDrop(root: Node, intent: DropIntent, draggedId?: string | null): boolean {
+  const target = findNode(root, intent.targetId)
+  if (!target) return false
+
+  if (draggedId) {
+    if (draggedId === intent.targetId) return false
+    if (isAncestorOf(root, draggedId, intent.targetId)) return false
+  }
+
+  if (intent.placement === 'inside') {
+    return isContainerType(target.type)
+  }
+
+  if (target.id === root.id) return false
+  const parent = findParent(root, target.id)
+  return Boolean(parent && isContainerType(parent.type))
+}
+
+export function resolveDropInsert(root: Node, intent: DropIntent): InsertTarget | null {
+  if (!canDrop(root, intent)) return null
+  const target = findNode(root, intent.targetId)
+  if (!target) return null
+
+  if (intent.placement === 'inside') {
+    return { parentId: target.id, index: target.children.length, parent: target }
+  }
+
+  const parent = findParent(root, target.id)
+  if (!parent) return null
+  const index = parent.children.findIndex((child) => child.id === target.id)
+  if (index < 0) return null
+  return {
+    parentId: parent.id,
+    index: intent.placement === 'before' ? index : index + 1,
+    parent,
+  }
+}
+
+export function insertAtDrop(root: Node, child: Node, intent: DropIntent): Node | null {
+  const target = resolveDropInsert(root, intent)
+  if (!target) return null
+  return insertChild(root, target.parentId, child, target.index)
+}
+
+export function removeNode(root: Node, id: string): { root: Node; node: Node } | null {
+  if (root.id === id) return null
+  const node = findNode(root, id)
+  if (!node) return null
+
+  const walk = (current: Node): Node => {
+    if (current.children.some((child) => child.id === id)) {
+      return { ...current, children: current.children.filter((child) => child.id !== id) }
+    }
+    let changed = false
+    const children = current.children.map((item) => {
+      const next = walk(item)
+      if (next !== item) changed = true
+      return next
+    })
+    return changed ? { ...current, children } : current
+  }
+
+  return { root: walk(root), node }
+}
+
+export function moveNode(root: Node, nodeId: string, intent: DropIntent): Node | null {
+  if (!canDrop(root, intent, nodeId)) return null
+  const extracted = removeNode(root, nodeId)
+  if (!extracted) return null
+  const target = resolveDropInsert(extracted.root, intent)
+  if (!target) return null
+  return insertChild(extracted.root, target.parentId, extracted.node, target.index)
+}
+
+function patchActivePage(project: Project, root: Node): Project {
+  const page = project.pages[0]
+  if (!page) return project
+  return {
+    ...project,
+    pages: project.pages.map((item) => (item.id === page.id ? { ...page, root } : item)),
+  }
+}
+
+export function insertAtDropInProject(
+  project: Project,
+  type: NodeType,
+  intent: DropIntent,
+): { project: Project; node: Node } | null {
+  const page = project.pages[0]
+  if (!page) return null
+  const node = createNode(type)
+  const root = insertAtDrop(page.root, node, intent)
+  if (!root) return null
+  return { project: patchActivePage(project, root), node }
+}
+
+export function moveNodeInProject(
+  project: Project,
+  nodeId: string,
+  intent: DropIntent,
+): Project | null {
+  const page = project.pages[0]
+  if (!page) return null
+  const root = moveNode(page.root, nodeId, intent)
+  if (!root) return null
+  return patchActivePage(project, root)
+}

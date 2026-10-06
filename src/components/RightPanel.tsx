@@ -1,12 +1,36 @@
-import { BLOCK_GROUPS } from '../blocks/registry.ts'
+import { useDraggable } from '@dnd-kit/core'
+import { BLOCK_GROUPS, type BlockDef } from '../blocks/registry.ts'
+import { blockDragId } from '../editor/dnd.ts'
 import { getActivePage, useEditorStore } from '../editor/store.ts'
 import { LayerTree } from './LayerTree'
+
+function BlockButton({ item, onAdd }: { item: BlockDef; onAdd: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: blockDragId(item.type),
+    data: { kind: 'block', type: item.type },
+  })
+
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      onClick={onAdd}
+      className="cursor-grab rounded-md border border-neutral-200 bg-neutral-50 px-2 py-3 text-center text-xs text-neutral-600 hover:border-blue-400 hover:bg-blue-50"
+      style={{ opacity: isDragging ? 0.45 : 1 }}
+      {...listeners}
+      {...attributes}
+    >
+      {item.label}
+    </button>
+  )
+}
 
 export function RightPanel() {
   const addBlock = useEditorStore((s) => s.addBlock)
   const lastInsertError = useEditorStore((s) => s.lastInsertError)
   const project = useEditorStore((s) => s.project)
   const selectedId = useEditorStore((s) => s.selectedId)
+  const dropPreview = useEditorStore((s) => s.dropPreview)
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
   const tab = useEditorStore((s) => s.rightTab)
   const setTab = useEditorStore((s) => s.setRightTab)
@@ -52,22 +76,19 @@ export function RightPanel() {
                 <h3 className="mb-2 text-xs font-semibold text-neutral-400">{group.label}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {group.items.map((item) => (
-                    <button
-                      key={item.type}
-                      type="button"
-                      draggable
-                      onClick={() => addBlock(item.type)}
-                      className="cursor-grab rounded-md border border-neutral-200 bg-neutral-50 px-2 py-3 text-center text-xs text-neutral-600 hover:border-blue-400 hover:bg-blue-50"
-                    >
-                      {item.label}
-                    </button>
+                    <BlockButton key={item.type} item={item} onAdd={() => addBlock(item.type)} />
                   ))}
                 </div>
               </section>
             ))}
           </>
         ) : page ? (
-          <LayerTree root={page.root} selectedId={selectedId} onSelect={setSelectedId} />
+          <LayerTree
+            root={page.root}
+            selectedId={selectedId}
+            dropPreview={dropPreview}
+            onSelect={setSelectedId}
+          />
         ) : (
           <p className="text-xs text-neutral-400">لا توجد صفحة</p>
         )}

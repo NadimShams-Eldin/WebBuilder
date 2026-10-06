@@ -1,5 +1,7 @@
-import { Canvas } from './Canvas'
+import { useDroppable } from '@dnd-kit/core'
+import { CANVAS_DROPPABLE_ID } from '../editor/dnd.ts'
 import { DEVICE_WIDTHS, useEditorStore, type Device } from '../editor/store.ts'
+import { Canvas } from './Canvas'
 
 const DEVICES: { id: Device; label: string }[] = [
   { id: 'desktop', label: 'حاسوب' },
@@ -12,6 +14,7 @@ export function CanvasArea() {
   const zoom = useEditorStore((s) => s.zoom)
   const setDevice = useEditorStore((s) => s.setDevice)
   const setZoom = useEditorStore((s) => s.setZoom)
+  const { setNodeRef } = useDroppable({ id: CANVAS_DROPPABLE_ID })
 
   return (
     <main className="flex h-full flex-1 flex-col bg-neutral-100">
@@ -52,7 +55,7 @@ export function CanvasArea() {
         </div>
       </div>
 
-      <div className="flex flex-1 justify-center overflow-auto p-8">
+      <div ref={setNodeRef} className="flex flex-1 justify-center overflow-auto p-8">
         <Canvas />
       </div>
     </main>
