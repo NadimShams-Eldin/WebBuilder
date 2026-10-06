@@ -38,10 +38,28 @@ export {
 } from './drop.ts'
 export { createPage, createProject, DEFAULT_THEME } from './createProject.ts'
 export { createDemoProject } from './demoProject.ts'
+export {
+  canRedo,
+  canUndo,
+  emptyHistory,
+  HISTORY_LIMIT,
+  pushHistory,
+  redoHistory,
+  shouldCoalesceUpdate,
+  snapshotOf,
+  undoHistory,
+  UPDATE_COALESCE_MS,
+  type CoalesceKind,
+  type CoalesceState,
+  type EditorSnapshot,
+  type HistoryState,
+} from './history.ts'
 export { renderCss, renderHtml, renderPageHtml } from './render.ts'
 export {
   DEVICE_WIDTHS,
   getActivePage,
+  selectCanRedo,
+  selectCanUndo,
   useEditorStore,
   type Device,
   type EditorState,

@@ -1,4 +1,43 @@
+import { useEffect } from 'react'
+import { selectCanRedo, selectCanUndo, useEditorStore } from '../editor/store.ts'
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  if (target.isContentEditable) return true
+  const tag = target.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+}
+
 export function AppHeader() {
+  const undo = useEditorStore((s) => s.undo)
+  const redo = useEditorStore((s) => s.redo)
+  const canUndo = useEditorStore(selectCanUndo)
+  const canRedo = useEditorStore(selectCanRedo)
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return
+      if (isEditableTarget(event.target)) return
+      const key = event.key.toLowerCase()
+      if (key === 'z' && event.shiftKey) {
+        event.preventDefault()
+        redo()
+        return
+      }
+      if (key === 'z') {
+        event.preventDefault()
+        undo()
+        return
+      }
+      if (key === 'y') {
+        event.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [undo, redo])
+
   return (
     <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-2">
       <div className="flex items-center gap-4">
@@ -16,14 +55,28 @@ export function AppHeader() {
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1 rounded-md border border-neutral-200">
           <button
-            className="px-2 py-1.5 text-neutral-400 hover:text-neutral-700"
-            title="تراجع"
+            type="button"
+            className={
+              canUndo
+                ? 'px-2 py-1.5 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900'
+                : 'px-2 py-1.5 text-neutral-300'
+            }
+            title="تراجع (Ctrl+Z)"
+            disabled={!canUndo}
+            onClick={() => undo()}
           >
             ↷
           </button>
           <button
-            className="px-2 py-1.5 text-neutral-400 hover:text-neutral-700"
-            title="إعادة"
+            type="button"
+            className={
+              canRedo
+                ? 'px-2 py-1.5 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900'
+                : 'px-2 py-1.5 text-neutral-300'
+            }
+            title="إعادة (Ctrl+Y)"
+            disabled={!canRedo}
+            onClick={() => redo()}
           >
             ↶
           </button>
