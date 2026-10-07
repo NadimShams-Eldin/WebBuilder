@@ -23,6 +23,13 @@ export function createDemoProject(): Project {
       color: '#0f172a',
     },
   })
+  heroHeading.animation = {
+    trigger: 'load',
+    effect: 'fade',
+    delay: 0,
+    duration: 0.7,
+    easing: 'ease-out',
+  }
 
   const heroText = apply(createNode('text'), {
     props: {

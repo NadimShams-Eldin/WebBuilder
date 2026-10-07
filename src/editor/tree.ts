@@ -1,5 +1,5 @@
 import { createNode, isContainerType } from './createNode.ts'
-import type { Node, NodeProps, NodeStyle, NodeType, Page, Project } from './types.ts'
+import type { Node, NodeAnimation, NodeProps, NodeStyle, NodeType, Page, Project } from './types.ts'
 
 export function findNode(node: Node, id: string): Node | null {
   if (node.id === id) return node
@@ -103,6 +103,7 @@ export type NodePatch = {
   name?: string
   props?: NodeProps
   style?: NodeStyle
+  animation?: NodeAnimation | null
 }
 
 export function updateNode(root: Node, id: string, patch: NodePatch): Node | null {
@@ -116,6 +117,7 @@ export function updateNode(root: Node, id: string, patch: NodePatch): Node | nul
         name: patch.name ?? node.name,
         props: patch.props ? { ...node.props, ...patch.props } : node.props,
         style: patch.style ? { ...node.style, ...patch.style } : node.style,
+        animation: patch.animation !== undefined ? patch.animation : node.animation,
       }
     }
     let changed = false

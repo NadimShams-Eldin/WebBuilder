@@ -1,3 +1,4 @@
+import { ANIMATION_SCRIPT, hasScrollAnimation, normalizeAnimation, renderAnimationCss } from './animation.ts'
 import { filterStyle, toKebabCase } from './cssWhitelist.ts'
 import type { Node, NodeStyle, Project } from './types.ts'
 
@@ -30,14 +31,20 @@ function attr(name: string, value: string | number | boolean | undefined): strin
   return ` ${name}="${escapeAttr(String(value))}"`
 }
 
+function animationAttrs(node: Node): string {
+  const animation = normalizeAnimation(node.animation)
+  if (!animation) return ''
+  return `${attr('data-qanim', animation.trigger)}${attr('data-qeffect', animation.effect)}`
+}
+
 function openTag(tag: string, node: Node, extra = ''): string {
   const cls = classNameFor(node.id)
-  return `<${tag} class="${cls}" data-qid="${escapeAttr(node.id)}" data-qtype="${node.type}"${extra}>`
+  return `<${tag} class="${cls}" data-qid="${escapeAttr(node.id)}" data-qtype="${node.type}"${animationAttrs(node)}${extra}>`
 }
 
 function voidTag(tag: string, node: Node, extra = ''): string {
   const cls = classNameFor(node.id)
-  return `<${tag} class="${cls}" data-qid="${escapeAttr(node.id)}" data-qtype="${node.type}"${extra} />`
+  return `<${tag} class="${cls}" data-qid="${escapeAttr(node.id)}" data-qtype="${node.type}"${animationAttrs(node)}${extra} />`
 }
 
 function renderChildren(node: Node): string {
@@ -128,6 +135,8 @@ export function renderCss(project: Project): string {
   }
 
   for (const page of project.pages) walk(page.root)
+  const animationCss = renderAnimationCss(project)
+  if (animationCss) lines.push(animationCss)
   return lines.join('\n')
 }
 
@@ -159,6 +168,7 @@ ${renderCss(project)}
 <body>
 ${renderHtml(node)}
 ${editor ? EDITOR_SCRIPT : ''}
+${hasScrollAnimation(node) ? ANIMATION_SCRIPT : ''}
 </body>
 </html>`
 }

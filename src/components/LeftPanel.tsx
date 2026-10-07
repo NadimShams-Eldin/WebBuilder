@@ -1,11 +1,24 @@
 import { useState } from 'react'
+import {
+  ANIMATION_EASING_LABELS,
+  ANIMATION_EASINGS,
+  ANIMATION_EFFECT_LABELS,
+  ANIMATION_EFFECTS,
+  ANIMATION_TRIGGER_LABELS,
+  ANIMATION_TRIGGERS,
+  DEFAULT_ANIMATION,
+  isAnimationEasing,
+  isAnimationEffect,
+  isAnimationTrigger,
+  normalizeAnimation,
+} from '../editor/animation.ts'
 import { NODE_TYPE_LABELS } from '../editor/createNode.ts'
 import { getActivePage, useEditorStore } from '../editor/store.ts'
 import { findNode } from '../editor/tree.ts'
-import type { Node, NodeProps } from '../editor/types.ts'
+import type { Node, NodeAnimation, NodeProps } from '../editor/types.ts'
 import { CONTENT_FIELDS, STYLE_GROUPS, type FieldKind } from './propertyFields.ts'
 
-type PanelTab = 'content' | 'style'
+type PanelTab = 'content' | 'style' | 'animation'
 
 function FieldControl({
   kind,
@@ -112,6 +125,98 @@ function styleToInput(node: Node, prop: string): string {
   return value === undefined ? '' : String(value)
 }
 
+function AnimationFields({
+  animation,
+  onChange,
+}: {
+  animation: NodeAnimation | null
+  onChange: (animation: NodeAnimation | null) => void
+}) {
+  const enabled = Boolean(animation)
+  const current = normalizeAnimation(animation) ?? DEFAULT_ANIMATION
+
+  const patch = (partial: Partial<NodeAnimation>) => {
+    onChange({ ...current, ...partial })
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <label className="flex items-center gap-2 text-xs text-neutral-700">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(event) => onChange(event.target.checked ? { ...DEFAULT_ANIMATION } : null)}
+        />
+        تفعيل الحركة
+      </label>
+      {enabled ? (
+        <>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500">المشغّل</span>
+            <FieldControl
+              kind="select"
+              value={current.trigger}
+              options={ANIMATION_TRIGGERS.map((value) => ({
+                value,
+                label: ANIMATION_TRIGGER_LABELS[value],
+              }))}
+              onChange={(value) => {
+                if (isAnimationTrigger(value)) patch({ trigger: value })
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500">التأثير</span>
+            <FieldControl
+              kind="select"
+              value={current.effect}
+              options={ANIMATION_EFFECTS.map((value) => ({
+                value,
+                label: ANIMATION_EFFECT_LABELS[value],
+              }))}
+              onChange={(value) => {
+                if (isAnimationEffect(value)) patch({ effect: value })
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500">المدة (ث)</span>
+            <FieldControl
+              kind="number"
+              value={String(current.duration)}
+              onChange={(value) => patch({ duration: Number(value) })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500">التأخير (ث)</span>
+            <FieldControl
+              kind="number"
+              value={String(current.delay)}
+              onChange={(value) => patch({ delay: Number(value) })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500">المنحنى</span>
+            <FieldControl
+              kind="select"
+              value={current.easing}
+              options={ANIMATION_EASINGS.map((value) => ({
+                value,
+                label: ANIMATION_EASING_LABELS[value],
+              }))}
+              onChange={(value) => {
+                if (isAnimationEasing(value)) patch({ easing: value })
+              }}
+            />
+          </label>
+        </>
+      ) : (
+        <p className="text-xs text-neutral-400">لا حركة على هذا العنصر.</p>
+      )}
+    </div>
+  )
+}
+
 export function LeftPanel() {
   const project = useEditorStore((s) => s.project)
   const selectedId = useEditorStore((s) => s.selectedId)
@@ -162,6 +267,17 @@ export function LeftPanel() {
             >
               الأنماط
             </button>
+            <button
+              type="button"
+              onClick={() => setTab('animation')}
+              className={
+                tab === 'animation'
+                  ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900'
+                  : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50'
+              }
+            >
+              الحركة
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-3">
@@ -187,7 +303,7 @@ export function LeftPanel() {
                   </label>
                 ))}
               </div>
-            ) : (
+            ) : tab === 'style' ? (
               <div className="flex flex-col gap-4">
                 {STYLE_GROUPS.map((group) => (
                   <section key={group.id}>
@@ -212,6 +328,11 @@ export function LeftPanel() {
                   </section>
                 ))}
               </div>
+            ) : (
+              <AnimationFields
+                animation={node.animation}
+                onChange={(animation) => updateSelected({ animation })}
+              />
             )}
           </div>
         </>

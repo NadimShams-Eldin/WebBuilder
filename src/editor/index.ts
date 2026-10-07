@@ -1,3 +1,22 @@
+export {
+  ANIMATION_EASING_LABELS,
+  ANIMATION_EASINGS,
+  ANIMATION_EFFECT_LABELS,
+  ANIMATION_EFFECTS,
+  ANIMATION_SCRIPT,
+  ANIMATION_TRIGGER_LABELS,
+  ANIMATION_TRIGGERS,
+  collectAnimated,
+  collectProjectAnimated,
+  DEFAULT_ANIMATION,
+  hasScrollAnimation,
+  isAnimationEasing,
+  isAnimationEffect,
+  isAnimationTrigger,
+  normalizeAnimation,
+  renderAnimationCss,
+  type AnimationEasing,
+} from './animation.ts'
 export { ALLOWED_CSS_PROPS, CSS_GROUPS, filterStyle, isAllowedCssProp, toKebabCase } from './cssWhitelist.ts'
 export {
   createId,
