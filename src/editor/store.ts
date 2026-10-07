@@ -21,14 +21,16 @@ import {
   type NodePatch,
 } from './tree.ts'
 import type { NodeType, Project } from './types.ts'
+import {
+  clampZoom,
+  DEVICE_WIDTHS,
+  loadViewportPrefs,
+  saveViewportPrefs,
+  type Device,
+} from './viewport.ts'
 
-export type Device = 'desktop' | 'tablet' | 'phone'
-
-export const DEVICE_WIDTHS: Record<Device, number> = {
-  desktop: 1280,
-  tablet: 768,
-  phone: 390,
-}
+export type { Device }
+export { DEVICE_WIDTHS }
 
 export type RightTab = 'blocks' | 'outline'
 
@@ -74,11 +76,13 @@ export const useEditorStore = create<EditorState>((set, get) => {
     set({ ...patch, selectedId, history })
   }
 
+  const initialViewport = loadViewportPrefs()
+
   return {
     project: createDemoProject(),
     selectedId: null,
-    device: 'desktop',
-    zoom: 1,
+    device: initialViewport.device,
+    zoom: initialViewport.zoom,
     lastInsertError: null,
     rightTab: 'blocks',
     dropPreview: null,
@@ -90,8 +94,15 @@ export const useEditorStore = create<EditorState>((set, get) => {
       coalesce = null
       set({ selectedId, lastInsertError: null })
     },
-    setDevice: (device) => set({ device }),
-    setZoom: (zoom) => set({ zoom: Math.min(1.5, Math.max(0.5, zoom)) }),
+    setDevice: (device) => {
+      saveViewportPrefs({ device, zoom: get().zoom })
+      set({ device })
+    },
+    setZoom: (zoom) => {
+      const next = clampZoom(zoom)
+      saveViewportPrefs({ device: get().device, zoom: next })
+      set({ zoom: next })
+    },
     setRightTab: (rightTab) => set({ rightTab }),
     setDropPreview: (dropPreview) => set({ dropPreview }),
     addBlock: (type) => {

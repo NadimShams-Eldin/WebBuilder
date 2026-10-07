@@ -132,6 +132,8 @@ export function Canvas() {
           srcDoc={srcDoc}
           sandbox="allow-scripts allow-same-origin"
           className="block h-full w-full border-0 bg-white"
+          data-device={device}
+          data-width={width}
           style={{ pointerEvents: dragging ? 'none' : 'auto' }}
         />
         <div

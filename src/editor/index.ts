@@ -65,6 +65,21 @@ export {
   type EditorState,
   type RightTab,
 } from './store.ts'
+export {
+  clampZoom,
+  DEVICE_LABELS,
+  DEVICES,
+  loadViewportPrefs,
+  parseViewportPrefs,
+  saveViewportPrefs,
+  serializeViewportPrefs,
+  VIEWPORT_STORAGE_KEY,
+  ZOOM_DEFAULT,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  ZOOM_STEP,
+  type ViewportPrefs,
+} from './viewport.ts'
 export type {
   AnimationEffect,
   AnimationTrigger,
