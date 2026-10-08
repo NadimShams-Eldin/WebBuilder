@@ -4,102 +4,102 @@ export type FieldKind = 'text' | 'textarea' | 'number' | 'select' | 'checkbox' |
 
 export type PropField = {
   key: string
-  label: string
+  labelKey: string
   kind: FieldKind
-  options?: Array<{ value: string; label: string }>
+  optionKeys?: Array<{ value: string; labelKey?: string; label?: string }>
 }
 
 export type StyleField = {
   prop: string
-  label: string
+  labelKey: string
   kind: FieldKind
-  options?: Array<{ value: string; label: string }>
+  optionKeys?: Array<{ value: string; labelKey?: string }>
 }
 
 export const CONTENT_FIELDS: Partial<Record<NodeType, PropField[]>> = {
   heading: [
-    { key: 'text', label: 'النص', kind: 'textarea' },
+    { key: 'text', labelKey: 'prop.text', kind: 'textarea' },
     {
       key: 'level',
-      label: 'المستوى',
+      labelKey: 'prop.level',
       kind: 'select',
-      options: [1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: `H${n}` })),
+      optionKeys: [1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: `H${n}` })),
     },
   ],
-  text: [{ key: 'text', label: 'النص', kind: 'textarea' }],
+  text: [{ key: 'text', labelKey: 'prop.text', kind: 'textarea' }],
   list: [
-    { key: 'items', label: 'العناصر (سطر لكل عنصر)', kind: 'textarea' },
-    { key: 'ordered', label: 'قائمة مرقّمة', kind: 'checkbox' },
+    { key: 'items', labelKey: 'prop.items', kind: 'textarea' },
+    { key: 'ordered', labelKey: 'prop.ordered', kind: 'checkbox' },
   ],
   link: [
-    { key: 'text', label: 'النص', kind: 'text' },
-    { key: 'href', label: 'الرابط', kind: 'text' },
+    { key: 'text', labelKey: 'prop.text', kind: 'text' },
+    { key: 'href', labelKey: 'prop.href', kind: 'text' },
     {
       key: 'target',
-      label: 'الهدف',
+      labelKey: 'prop.target',
       kind: 'select',
-      options: [
-        { value: '_self', label: 'نفس النافذة' },
-        { value: '_blank', label: 'نافذة جديدة' },
+      optionKeys: [
+        { value: '_self', labelKey: 'target.self' },
+        { value: '_blank', labelKey: 'target.blank' },
       ],
     },
   ],
   image: [
-    { key: 'src', label: 'المصدر', kind: 'text' },
-    { key: 'alt', label: 'النص البديل', kind: 'text' },
+    { key: 'src', labelKey: 'prop.src', kind: 'text' },
+    { key: 'alt', labelKey: 'prop.alt', kind: 'text' },
   ],
   icon: [
-    { key: 'text', label: 'الرمز', kind: 'text' },
-    { key: 'label', label: 'التسمية', kind: 'text' },
+    { key: 'text', labelKey: 'prop.text', kind: 'text' },
+    { key: 'label', labelKey: 'prop.label', kind: 'text' },
   ],
   video: [
-    { key: 'src', label: 'المصدر', kind: 'text' },
-    { key: 'poster', label: 'صورة الغلاف', kind: 'text' },
-    { key: 'controls', label: 'أزرار التحكم', kind: 'checkbox' },
-    { key: 'autoplay', label: 'تشغيل تلقائي', kind: 'checkbox' },
-    { key: 'loop', label: 'تكرار', kind: 'checkbox' },
+    { key: 'src', labelKey: 'prop.src', kind: 'text' },
+    { key: 'poster', labelKey: 'prop.poster', kind: 'text' },
+    { key: 'controls', labelKey: 'prop.controls', kind: 'checkbox' },
+    { key: 'autoplay', labelKey: 'prop.autoplay', kind: 'checkbox' },
+    { key: 'loop', labelKey: 'prop.loop', kind: 'checkbox' },
   ],
   button: [
-    { key: 'text', label: 'النص', kind: 'text' },
+    { key: 'text', labelKey: 'prop.text', kind: 'text' },
     {
       key: 'type',
-      label: 'النوع',
+      labelKey: 'prop.type',
       kind: 'select',
-      options: [
-        { value: 'button', label: 'زر' },
-        { value: 'submit', label: 'إرسال' },
-        { value: 'reset', label: 'إعادة' },
+      optionKeys: [
+        { value: 'button', labelKey: 'button.button' },
+        { value: 'submit', labelKey: 'button.submit' },
+        { value: 'reset', labelKey: 'button.reset' },
       ],
     },
   ],
   input: [
     {
       key: 'inputType',
-      label: 'نوع الحقل',
+      labelKey: 'prop.inputType',
       kind: 'select',
-      options: [
-        { value: 'text', label: 'نص' },
-        { value: 'email', label: 'بريد' },
-        { value: 'password', label: 'كلمة مرور' },
-        { value: 'textarea', label: 'مساحة نص' },
-        { value: 'select', label: 'قائمة' },
-        { value: 'checkbox', label: 'اختيار' },
-        { value: 'radio', label: 'راديو' },
+      optionKeys: [
+        { value: 'text', labelKey: 'input.text' },
+        { value: 'email', labelKey: 'input.email' },
+        { value: 'password', labelKey: 'input.password' },
+        { value: 'textarea', labelKey: 'input.textarea' },
+        { value: 'select', labelKey: 'input.select' },
+        { value: 'checkbox', labelKey: 'input.checkbox' },
+        { value: 'radio', labelKey: 'input.radio' },
       ],
     },
-    { key: 'name', label: 'الاسم', kind: 'text' },
-    { key: 'placeholder', label: 'النص التوضيحي', kind: 'text' },
-    { key: 'value', label: 'القيمة', kind: 'text' },
-    { key: 'options', label: 'الخيارات (سطر لكل خيار)', kind: 'textarea' },
-    { key: 'checked', label: 'محدد', kind: 'checkbox' },
+    { key: 'name', labelKey: 'prop.name', kind: 'text' },
+    { key: 'placeholder', labelKey: 'prop.placeholder', kind: 'text' },
+    { key: 'value', labelKey: 'prop.value', kind: 'text' },
+    { key: 'options', labelKey: 'prop.options', kind: 'textarea' },
+    { key: 'checked', labelKey: 'prop.checked', kind: 'checkbox' },
   ],
   form: [
-    { key: 'action', label: 'المسار', kind: 'text' },
+    { key: 'action', labelKey: 'prop.action', kind: 'text' },
     {
       key: 'method',
-      label: 'الطريقة',
+      labelKey: 'prop.method',
       kind: 'select',
-      options: [
+      optionKeys: [
         { value: 'post', label: 'POST' },
         { value: 'get', label: 'GET' },
       ],
@@ -107,99 +107,89 @@ export const CONTENT_FIELDS: Partial<Record<NodeType, PropField[]>> = {
   ],
 }
 
-export const STYLE_GROUPS: Array<{ id: string; label: string; fields: StyleField[] }> = [
+export const STYLE_GROUPS: Array<{ id: string; labelKey: string; fields: StyleField[] }> = [
   {
     id: 'layout',
-    label: 'تخطيط',
+    labelKey: 'style.layout',
     fields: [
       {
         prop: 'display',
-        label: 'العرض',
+        labelKey: 'style.display',
         kind: 'select',
-        options: ['block', 'flex', 'grid', 'inline-flex', 'none'].map((v) => ({
-          value: v,
-          label: v,
-        })),
+        optionKeys: ['block', 'flex', 'grid', 'inline-flex', 'none'].map((v) => ({ value: v })),
       },
       {
         prop: 'flexDirection',
-        label: 'اتجاه المرن',
+        labelKey: 'style.flexDirection',
         kind: 'select',
-        options: ['row', 'column', 'row-reverse', 'column-reverse'].map((v) => ({
-          value: v,
-          label: v,
-        })),
+        optionKeys: ['row', 'column', 'row-reverse', 'column-reverse'].map((v) => ({ value: v })),
       },
       {
         prop: 'justifyContent',
-        label: 'التوزيع',
+        labelKey: 'style.justifyContent',
         kind: 'select',
-        options: ['flex-start', 'center', 'flex-end', 'space-between', 'space-around'].map((v) => ({
-          value: v,
-          label: v,
-        })),
+        optionKeys: ['flex-start', 'center', 'flex-end', 'space-between', 'space-around'].map(
+          (v) => ({ value: v }),
+        ),
       },
       {
         prop: 'alignItems',
-        label: 'المحاذاة',
+        labelKey: 'style.alignItems',
         kind: 'select',
-        options: ['stretch', 'flex-start', 'center', 'flex-end'].map((v) => ({
-          value: v,
-          label: v,
-        })),
+        optionKeys: ['stretch', 'flex-start', 'center', 'flex-end'].map((v) => ({ value: v })),
       },
-      { prop: 'gap', label: 'الفجوة', kind: 'text' },
-      { prop: 'gridTemplateColumns', label: 'أعمدة الشبكة', kind: 'text' },
+      { prop: 'gap', labelKey: 'style.gap', kind: 'text' },
+      { prop: 'gridTemplateColumns', labelKey: 'style.gridTemplateColumns', kind: 'text' },
     ],
   },
   {
     id: 'dimensions',
-    label: 'أبعاد',
+    labelKey: 'style.dimensions',
     fields: [
-      { prop: 'width', label: 'العرض', kind: 'text' },
-      { prop: 'height', label: 'الارتفاع', kind: 'text' },
-      { prop: 'maxWidth', label: 'أقصى عرض', kind: 'text' },
-      { prop: 'minHeight', label: 'أدنى ارتفاع', kind: 'text' },
+      { prop: 'width', labelKey: 'style.width', kind: 'text' },
+      { prop: 'height', labelKey: 'style.height', kind: 'text' },
+      { prop: 'maxWidth', labelKey: 'style.maxWidth', kind: 'text' },
+      { prop: 'minHeight', labelKey: 'style.minHeight', kind: 'text' },
     ],
   },
   {
     id: 'spacing',
-    label: 'مسافات',
+    labelKey: 'style.spacing',
     fields: [
-      { prop: 'padding', label: 'الحشو', kind: 'text' },
-      { prop: 'margin', label: 'الهامش', kind: 'text' },
+      { prop: 'padding', labelKey: 'style.padding', kind: 'text' },
+      { prop: 'margin', labelKey: 'style.margin', kind: 'text' },
     ],
   },
   {
     id: 'typography',
-    label: 'خطوط',
+    labelKey: 'style.typography',
     fields: [
-      { prop: 'fontSize', label: 'الحجم', kind: 'text' },
-      { prop: 'fontWeight', label: 'الوزن', kind: 'text' },
-      { prop: 'lineHeight', label: 'ارتفاع السطر', kind: 'text' },
+      { prop: 'fontSize', labelKey: 'style.fontSize', kind: 'text' },
+      { prop: 'fontWeight', labelKey: 'style.fontWeight', kind: 'text' },
+      { prop: 'lineHeight', labelKey: 'style.lineHeight', kind: 'text' },
       {
         prop: 'textAlign',
-        label: 'محاذاة النص',
+        labelKey: 'style.textAlign',
         kind: 'select',
-        options: ['start', 'center', 'end', 'justify'].map((v) => ({ value: v, label: v })),
+        optionKeys: ['start', 'center', 'end', 'justify'].map((v) => ({ value: v })),
       },
     ],
   },
   {
     id: 'colors',
-    label: 'ألوان',
+    labelKey: 'style.colors',
     fields: [
-      { prop: 'color', label: 'لون النص', kind: 'color' },
-      { prop: 'backgroundColor', label: 'لون الخلفية', kind: 'color' },
+      { prop: 'color', labelKey: 'style.color', kind: 'color' },
+      { prop: 'backgroundColor', labelKey: 'style.backgroundColor', kind: 'color' },
     ],
   },
   {
     id: 'borders',
-    label: 'حدود',
+    labelKey: 'style.borders',
     fields: [
-      { prop: 'border', label: 'الحد', kind: 'text' },
-      { prop: 'borderRadius', label: 'الاستدارة', kind: 'text' },
-      { prop: 'boxShadow', label: 'الظل', kind: 'text' },
+      { prop: 'border', labelKey: 'style.border', kind: 'text' },
+      { prop: 'borderRadius', labelKey: 'style.borderRadius', kind: 'text' },
+      { prop: 'boxShadow', labelKey: 'style.boxShadow', kind: 'text' },
     ],
   },
 ]

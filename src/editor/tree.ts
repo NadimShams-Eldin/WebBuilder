@@ -1,4 +1,5 @@
 import { createNode, isContainerType } from './createNode.ts'
+import { resolvePage } from './pages.ts'
 import type { Node, NodeAnimation, NodeProps, NodeStyle, NodeType, Page, Project } from './types.ts'
 
 export function findNode(node: Node, id: string): Node | null {
@@ -137,31 +138,27 @@ export function updateNodeInProject(
   project: Project,
   id: string,
   patch: NodePatch,
+  pageId?: string | null,
 ): Project | null {
-  const page = project.pages[0]
+  const page = resolvePage(project, pageId)
   if (!page) return null
   const root = updateNode(page.root, id, patch)
   if (!root) return null
-  return {
-    ...project,
-    pages: project.pages.map((item) => (item.id === page.id ? { ...page, root } : item)),
-  }
+  return patchPageRoot(project, page.id, root)
 }
 
 export function addNodeToProject(
   project: Project,
   selectedId: string | null,
   type: NodeType,
+  pageId?: string | null,
 ): { project: Project; node: Node } | null {
-  const page = project.pages[0]
+  const page = resolvePage(project, pageId)
   if (!page) return null
   const result = addNodeToPage(page, selectedId, type)
   if (!result) return null
   return {
-    project: {
-      ...project,
-      pages: project.pages.map((item) => (item.id === page.id ? result.page : item)),
-    },
+    project: patchPageRoot(project, page.id, result.page.root),
     node: result.node,
   }
 }
@@ -253,36 +250,63 @@ export function moveNode(root: Node, nodeId: string, intent: DropIntent): Node |
   return insertChild(extracted.root, target.parentId, extracted.node, target.index)
 }
 
-function patchActivePage(project: Project, root: Node): Project {
-  const page = project.pages[0]
-  if (!page) return project
+function patchPageRoot(project: Project, pageId: string, root: Node): Project {
   return {
     ...project,
-    pages: project.pages.map((item) => (item.id === page.id ? { ...page, root } : item)),
+    pages: project.pages.map((item) => (item.id === pageId ? { ...item, root } : item)),
   }
+}
+
+function patchActivePage(project: Project, root: Node, pageId?: string | null): Project {
+  const page = resolvePage(project, pageId)
+  if (!page) return project
+  return patchPageRoot(project, page.id, root)
 }
 
 export function insertAtDropInProject(
   project: Project,
   type: NodeType,
   intent: DropIntent,
+  pageId?: string | null,
 ): { project: Project; node: Node } | null {
-  const page = project.pages[0]
+  const page = resolvePage(project, pageId)
   if (!page) return null
   const node = createNode(type)
   const root = insertAtDrop(page.root, node, intent)
   if (!root) return null
-  return { project: patchActivePage(project, root), node }
+  return { project: patchActivePage(project, root, page.id), node }
 }
 
 export function moveNodeInProject(
   project: Project,
   nodeId: string,
   intent: DropIntent,
+  pageId?: string | null,
 ): Project | null {
-  const page = project.pages[0]
+  const page = resolvePage(project, pageId)
   if (!page) return null
   const root = moveNode(page.root, nodeId, intent)
   if (!root) return null
-  return patchActivePage(project, root)
+  return patchActivePage(project, root, page.id)
+}
+
+export function removeNodeInProject(
+  project: Project,
+  nodeId: string,
+  pageId?: string | null,
+): { project: Project; parentId: string | null } | null {
+  const page = resolvePage(project, pageId)
+  if (!page) return null
+  if (page.root.id === nodeId) return null
+  const parent = findParent(page.root, nodeId)
+  const extracted = removeNode(page.root, nodeId)
+  if (!extracted) return null
+  return { project: patchActivePage(project, extracted.root, page.id), parentId: parent?.id ?? null }
+}
+
+export function clearPageInProject(project: Project, pageId?: string | null): Project | null {
+  const page = resolvePage(project, pageId)
+  if (!page) return null
+  if (page.root.children.length === 0) return project
+  return patchActivePage(project, { ...page.root, children: [] }, page.id)
 }

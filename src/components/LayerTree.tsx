@@ -1,9 +1,9 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { useMemo, useState } from 'react'
-import { NODE_TYPE_LABELS } from '../editor/createNode.ts'
 import { outlineDragId } from '../editor/dnd.ts'
 import { getAncestorIds, type DropIntent } from '../editor/tree.ts'
 import type { Node } from '../editor/types.ts'
+import { useI18n } from '../editor/useI18n.ts'
 
 type LayerTreeProps = {
   root: Node
@@ -31,10 +31,11 @@ function LayerItem({
   depth: number
   disableDrag: boolean
 }) {
+  const { t, locale } = useI18n()
   const hasChildren = node.children.length > 0
   const isCollapsed = collapsed.has(node.id)
   const selected = selectedId === node.id
-  const label = node.name || NODE_TYPE_LABELS[node.type]
+  const label = node.name || t(`block.${node.type}`)
   const preview = dropPreview?.targetId === node.id ? dropPreview : null
 
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
@@ -58,8 +59,8 @@ function LayerItem({
         ref={setRef}
         className={
           selected
-            ? 'relative flex items-center gap-1 rounded-md bg-blue-50 text-blue-800'
-            : 'relative flex items-center gap-1 rounded-md hover:bg-neutral-50'
+            ? 'relative flex items-center gap-1 rounded-md bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200'
+            : 'relative flex items-center gap-1 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800'
         }
         style={{
           paddingInlineStart: `${0.25 + depth * 0.75}rem`,
@@ -83,7 +84,7 @@ function LayerItem({
               event.stopPropagation()
               onToggle(node.id)
             }}
-            aria-label={isCollapsed ? 'توسيع' : 'طي'}
+            aria-label={isCollapsed ? t('outline.expand') : t('outline.collapse')}
           >
             {isCollapsed ? '+' : '−'}
           </button>
@@ -93,12 +94,12 @@ function LayerItem({
         <button
           type="button"
           onClick={() => onSelect(node.id)}
-          className="min-w-0 flex-1 cursor-grab truncate py-1 text-right text-xs"
+          className={`min-w-0 flex-1 cursor-grab truncate py-1 text-xs ${locale === 'ar' ? 'text-right' : 'text-left'}`}
           {...listeners}
           {...attributes}
         >
           <span className="font-medium">{label}</span>
-          <span className="mr-1 text-neutral-400">{node.type}</span>
+          <span className="ms-1 text-neutral-400">{node.type}</span>
         </button>
       </div>
       {hasChildren && !isCollapsed

@@ -4,6 +4,7 @@ import { registerCanvasIframe } from '../editor/dnd.ts'
 import { indicatorBox, type IndicatorBox } from '../editor/drop.ts'
 import { renderPageHtml } from '../editor/render.ts'
 import { DEVICE_WIDTHS, getActivePage, useEditorStore } from '../editor/store.ts'
+import { useI18n } from '../editor/useI18n.ts'
 
 type OverlayRect = { top: number; left: number; width: number; height: number }
 
@@ -11,6 +12,7 @@ type CanvasMessage = {
   source?: string
   type?: string
   id?: string | null
+  pageId?: string | null
 }
 
 function queryNodeRect(doc: Document, id: string): OverlayRect | null {
@@ -26,12 +28,15 @@ function queryNodeRect(doc: Document, id: string): OverlayRect | null {
 }
 
 export function Canvas() {
+  const { t } = useI18n()
   const project = useEditorStore((s) => s.project)
+  const activePageId = useEditorStore((s) => s.activePageId)
   const device = useEditorStore((s) => s.device)
   const zoom = useEditorStore((s) => s.zoom)
   const selectedId = useEditorStore((s) => s.selectedId)
   const dropPreview = useEditorStore((s) => s.dropPreview)
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
+  const setActivePage = useEditorStore((s) => s.setActivePage)
   const setRightTab = useEditorStore((s) => s.setRightTab)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const { active } = useDndContext()
@@ -40,9 +45,9 @@ export function Canvas() {
   const [overlay, setOverlay] = useState<OverlayRect | null>(null)
   const [dropBox, setDropBox] = useState<IndicatorBox | null>(null)
 
-  const page = getActivePage(project)
+  const page = getActivePage(project, activePageId)
   const srcDoc = useMemo(
-    () => (page ? renderPageHtml(project, page.root, true) : ''),
+    () => (page ? renderPageHtml(project, page.root, true, page) : ''),
     [project, page],
   )
 
@@ -109,13 +114,18 @@ export function Canvas() {
 
   useEffect(() => {
     const onMessage = (event: MessageEvent<CanvasMessage>) => {
-      if (event.data?.source !== 'qitma-canvas' || event.data.type !== 'select') return
+      if (event.data?.source !== 'qitma-canvas') return
+      if (event.data.type === 'navigate' && event.data.pageId) {
+        setActivePage(event.data.pageId)
+        return
+      }
+      if (event.data.type !== 'select') return
       setSelectedId(event.data.id ?? null)
       if (event.data.id) setRightTab('outline')
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [setSelectedId, setRightTab])
+  }, [setSelectedId, setRightTab, setActivePage])
 
   return (
     <div
@@ -128,10 +138,10 @@ export function Canvas() {
       >
         <iframe
           ref={iframeRef}
-          title="معاينة الصفحة"
+          title={t('header.preview')}
           srcDoc={srcDoc}
           sandbox="allow-scripts allow-same-origin"
-          className="block h-full w-full border-0 bg-white"
+          className="block h-full w-full border-0 bg-white dark:bg-neutral-900"
           data-device={device}
           data-width={width}
           style={{ pointerEvents: dragging ? 'none' : 'auto' }}

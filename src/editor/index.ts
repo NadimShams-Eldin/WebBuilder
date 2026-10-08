@@ -73,10 +73,26 @@ export {
   type EditorSnapshot,
   type HistoryState,
 } from './history.ts'
-export { renderCss, renderHtml, renderPageHtml } from './render.ts'
+export {
+  addPageToProject,
+  findPage,
+  internalHref,
+  isInternalHref,
+  pageFileName,
+  parseInternalHref,
+  removePageFromProject,
+  renamePageInProject,
+  resolveHref,
+  resolvePage,
+  setPageSlugInProject,
+  slugify,
+  uniqueSlug,
+} from './pages.ts'
+export { renderCss, renderExportedPages, renderHtml, renderPageHtml } from './render.ts'
 export {
   DEVICE_WIDTHS,
   getActivePage,
+  selectActivePage,
   selectCanRedo,
   selectCanUndo,
   useEditorStore,

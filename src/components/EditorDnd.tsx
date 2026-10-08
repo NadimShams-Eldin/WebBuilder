@@ -9,7 +9,8 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { useCallback, useState, type ReactNode } from 'react'
-import { isContainerType, NODE_TYPE_LABELS } from '../editor/createNode.ts'
+import { isContainerType } from '../editor/createNode.ts'
+import { translate } from '../editor/i18n.ts'
 import {
   CANVAS_DROPPABLE_ID,
   editorCollision,
@@ -23,7 +24,8 @@ import { getActivePage, useEditorStore } from '../editor/store.ts'
 import { canDrop, findNode, type DropIntent } from '../editor/tree.ts'
 
 function resolvePreview(event: DragMoveEvent | DragEndEvent): DropIntent | null {
-  const page = getActivePage(useEditorStore.getState().project)
+  const state = useEditorStore.getState()
+  const page = getActivePage(state.project, state.activePageId)
   if (!page || !event.active) return null
   const drag = getDragData(event.active)
   if (!drag) return null
@@ -82,13 +84,15 @@ export function EditorDnd({ children }: { children: ReactNode }) {
       setOverlayLabel(null)
       return
     }
+    const locale = useEditorStore.getState().locale
     if (drag.kind === 'block') {
-      setOverlayLabel(NODE_TYPE_LABELS[drag.type])
+      setOverlayLabel(translate(locale, `block.${drag.type}`))
       return
     }
-    const page = getActivePage(useEditorStore.getState().project)
+    const state = useEditorStore.getState()
+    const page = getActivePage(state.project, state.activePageId)
     const node = page ? findNode(page.root, drag.id) : null
-    setOverlayLabel(node?.name || NODE_TYPE_LABELS[node?.type ?? 'text'])
+    setOverlayLabel(node?.name || translate(locale, `block.${node?.type ?? 'text'}`))
   }, [])
 
   const onDragMove = useCallback(
@@ -128,7 +132,7 @@ export function EditorDnd({ children }: { children: ReactNode }) {
       {children}
       <DragOverlay dropAnimation={null}>
         {overlayLabel ? (
-          <div className="rounded-md border border-blue-400 bg-white px-3 py-2 text-xs font-medium text-neutral-700 shadow-md">
+          <div className="rounded-md border border-blue-400 bg-white px-3 py-2 text-xs font-medium text-neutral-700 shadow-md dark:border-blue-500 dark:bg-neutral-800 dark:text-neutral-100">
             {overlayLabel}
           </div>
         ) : null}

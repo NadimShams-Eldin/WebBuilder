@@ -1,5 +1,6 @@
 import { createId, createNode } from './createNode.ts'
 import { DEFAULT_THEME } from './createProject.ts'
+import { internalHref } from './pages.ts'
 import type { Node, NodeProps, NodeStyle, Project } from './types.ts'
 
 function apply(node: Node, patch: { name?: string; props?: NodeProps; style?: NodeStyle; children?: Node[] }): Node {
@@ -55,8 +56,11 @@ export function createDemoProject(): Project {
     },
   })
 
+  const aboutPageId = createId('p')
+  const homePageId = createId('p')
+
   const moreLink = apply(createNode('link'), {
-    props: { text: 'تعرّف على الأصول', href: '#', target: '_self' },
+    props: { text: 'تعرّف على الأصول', href: internalHref(aboutPageId), target: '_self' },
     style: {
       color: '#2563eb',
       alignSelf: 'center',
@@ -196,16 +200,69 @@ export function createDemoProject(): Project {
     children: [hero, features, createNode('divider'), form],
   })
 
+  const aboutHeading = apply(createNode('heading'), {
+    props: { text: 'الأصول الأولية', level: 1 },
+    style: {
+      fontSize: '2rem',
+      fontWeight: 800,
+      margin: '0',
+      color: '#0f172a',
+    },
+  })
+
+  const aboutText = apply(createNode('text'), {
+    props: {
+      text: 'كل صفحة شجرة مستقلة. هذا الرابط يعود إلى الصفحة الرئيسية عبر slug التصدير.',
+    },
+    style: {
+      fontSize: '1.125rem',
+      lineHeight: 1.8,
+      margin: '0',
+      color: '#475569',
+      maxWidth: '40rem',
+    },
+  })
+
+  const homeLink = apply(createNode('link'), {
+    props: { text: 'العودة للرئيسية', href: internalHref(homePageId), target: '_self' },
+    style: {
+      color: '#2563eb',
+      fontWeight: 600,
+      textDecoration: 'none',
+    },
+  })
+
+  const aboutRoot = apply(createNode('container'), {
+    name: 'من نحن',
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem',
+      width: '100%',
+      maxWidth: '56rem',
+      marginInline: 'auto',
+      padding: '2rem 1.25rem 3rem',
+      boxSizing: 'border-box',
+    },
+    children: [aboutHeading, aboutText, homeLink],
+  })
+
   return {
     id: createId('prj'),
     name: 'قطمة',
     theme: { ...DEFAULT_THEME, backgroundColor: '#f1f5f9' },
     pages: [
       {
-        id: createId('p'),
+        id: homePageId,
         name: 'الصفحة الرئيسية',
         slug: 'index',
         root,
+      },
+      {
+        id: aboutPageId,
+        name: 'الأصول',
+        slug: 'about',
+        root: aboutRoot,
       },
     ],
     assets: [],

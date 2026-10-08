@@ -2,15 +2,21 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { createNode } from './createNode.ts'
 import { createProject } from './createProject.ts'
+import { addPageToProject } from './pages.ts'
 import {
   addNodeToPage,
+  addNodeToProject,
   canDrop,
+  clearPageInProject,
   findNode,
   getAncestorIds,
   insertAtDrop,
   moveNode,
+  removeNode,
+  removeNodeInProject,
   resolveInsertTarget,
   updateNode,
+  updateNodeInProject,
 } from './tree.ts'
 
 describe('tree insert', () => {
@@ -146,5 +152,57 @@ describe('drop and move', () => {
     assert.equal(canDrop(root, { targetId: 'a', placement: 'after' }, 'a'), false)
     assert.equal(moveNode(root, 'inner', { targetId: 'b', placement: 'after' }), null)
     assert.equal(canDrop(root, { targetId: 'b', placement: 'inside' }, 'inner'), false)
+  })
+})
+
+describe('remove and clear', () => {
+  it('removes a node and refuses to delete the root', () => {
+    const heading = createNode('heading', 'h')
+    const root = createNode('container', 'root')
+    root.children = [heading]
+    const next = removeNode(root, 'h')
+    assert.ok(next)
+    assert.equal(next.root.children.length, 0)
+    assert.equal(removeNode(root, 'root'), null)
+  })
+
+  it('clears the active page children in a project', () => {
+    const heading = createNode('heading', 'h')
+    const root = createNode('container', 'root')
+    root.children = [heading]
+    const project = createProject()
+    project.pages[0].root = root
+    const removed = removeNodeInProject(project, 'h')
+    assert.ok(removed)
+    assert.equal(removed.project.pages[0].root.children.length, 0)
+    assert.equal(removed.parentId, 'root')
+    assert.equal(removeNodeInProject(project, 'root'), null)
+
+    const filled = createProject()
+    filled.pages[0].root.children = [createNode('text', 't')]
+    const cleared = clearPageInProject(filled)
+    assert.ok(cleared)
+    assert.equal(cleared.pages[0].root.children.length, 0)
+  })
+
+  it('mutates only the targeted page in a multi-page project', () => {
+    const start = createProject()
+    const added = addPageToProject(start, 'About')
+    const aboutId = added.page.id
+    const inserted = addNodeToProject(added.project, null, 'heading', aboutId)
+    assert.ok(inserted)
+    assert.equal(inserted.project.pages[0].root.children.length, 0)
+    assert.equal(inserted.project.pages[1].root.children.length, 1)
+    const patched = updateNodeInProject(
+      inserted.project,
+      inserted.node.id,
+      { props: { text: 'من نحن' } },
+      aboutId,
+    )
+    assert.ok(patched)
+    assert.equal(patched.pages[1].root.children[0].props.text, 'من نحن')
+    const cleared = clearPageInProject(patched, aboutId)
+    assert.ok(cleared)
+    assert.equal(cleared.pages[1].root.children.length, 0)
   })
 })

@@ -1,8 +1,14 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
   color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 * {

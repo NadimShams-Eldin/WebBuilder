@@ -1,6 +1,7 @@
 import { ANIMATION_SCRIPT, hasScrollAnimation, normalizeAnimation, renderAnimationCss } from './animation.ts'
 import { filterStyle, toKebabCase } from './cssWhitelist.ts'
-import type { Node, NodeStyle, Project } from './types.ts'
+import { pageFileName, resolveHref } from './pages.ts'
+import type { Node, NodeStyle, Page, Project } from './types.ts'
 
 function escapeHtml(value: string): string {
   return value
@@ -47,20 +48,20 @@ function voidTag(tag: string, node: Node, extra = ''): string {
   return `<${tag} class="${cls}" data-qid="${escapeAttr(node.id)}" data-qtype="${node.type}"${animationAttrs(node)}${extra} />`
 }
 
-function renderChildren(node: Node): string {
-  return node.children.map(renderHtml).join('')
+function renderChildren(node: Node, project?: Project, resolveLinks = false): string {
+  return node.children.map((child) => renderHtml(child, project, resolveLinks)).join('')
 }
 
-export function renderHtml(node: Node): string {
+export function renderHtml(node: Node, project?: Project, resolveLinks = false): string {
   const p = node.props
 
   switch (node.type) {
     case 'container':
     case 'flex':
     case 'grid':
-      return `${openTag('div', node)}${renderChildren(node)}</div>`
+      return `${openTag('div', node)}${renderChildren(node, project, resolveLinks)}</div>`
     case 'form':
-      return `${openTag('form', node, `${attr('action', p.action ?? '')}${attr('method', p.method ?? 'post')}`)}${renderChildren(node)}</form>`
+      return `${openTag('form', node, `${attr('action', p.action ?? '')}${attr('method', p.method ?? 'post')}`)}${renderChildren(node, project, resolveLinks)}</form>`
     case 'spacer':
       return openTag('div', node) + '</div>'
     case 'divider':
@@ -77,8 +78,10 @@ export function renderHtml(node: Node): string {
       const items = (p.items ?? []).map((item) => `<li>${escapeHtml(item)}</li>`).join('')
       return `${openTag(tag, node)}${items}</${tag}>`
     }
-    case 'link':
-      return `${openTag('a', node, `${attr('href', p.href ?? '#')}${attr('target', p.target)}${p.target === '_blank' ? ' rel="noopener noreferrer"' : ''}`)}${escapeHtml(p.text ?? '')}</a>`
+    case 'link': {
+      const href = resolveLinks && project ? resolveHref(project, p.href) : (p.href ?? '#')
+      return `${openTag('a', node, `${attr('href', href)}${attr('target', p.target)}${p.target === '_blank' ? ' rel="noopener noreferrer"' : ''}`)}${escapeHtml(p.text ?? '')}</a>`
+    }
     case 'image':
       return voidTag('img', node, `${attr('src', p.src ?? '')}${attr('alt', p.alt ?? '')}`)
     case 'icon':
@@ -146,6 +149,12 @@ const EDITOR_SCRIPT = `<script>
     event.preventDefault();
     event.stopPropagation();
     var target = event.target;
+    var link = target && target.closest ? target.closest('a[href]') : null;
+    var href = link ? link.getAttribute('href') || '' : '';
+    if (href.indexOf('page:') === 0) {
+      window.parent.postMessage({ source: 'qitma-canvas', type: 'navigate', pageId: href.slice(5) }, '*');
+      return;
+    }
     var el = target && target.closest ? target.closest('[data-qid]') : null;
     var id = el ? el.getAttribute('data-qid') : null;
     window.parent.postMessage({ source: 'qitma-canvas', type: 'select', id: id }, '*');
@@ -154,21 +163,39 @@ const EDITOR_SCRIPT = `<script>
 })();
 </script>`
 
-export function renderPageHtml(project: Project, node: Node, editor = false): string {
+export function renderPageHtml(
+  project: Project,
+  node: Node,
+  editor = false,
+  page?: Page,
+): string {
+  const title = page?.name || project.name
   return `<!DOCTYPE html>
 <html lang="ar" dir="${project.theme.direction}">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${escapeHtml(project.name)}</title>
+<title>${escapeHtml(title)}</title>
 <style>
 ${renderCss(project)}
 </style>
 </head>
 <body>
-${renderHtml(node)}
+${renderHtml(node, project, !editor)}
 ${editor ? EDITOR_SCRIPT : ''}
 ${hasScrollAnimation(node) ? ANIMATION_SCRIPT : ''}
 </body>
 </html>`
+}
+
+export type ExportedPage = {
+  fileName: string
+  html: string
+}
+
+export function renderExportedPages(project: Project): ExportedPage[] {
+  return project.pages.map((page) => ({
+    fileName: pageFileName(page),
+    html: renderPageHtml(project, page.root, false, page),
+  }))
 }

@@ -1,10 +1,11 @@
 import { useDraggable } from '@dnd-kit/core'
 import { BLOCK_GROUPS, type BlockDef } from '../blocks/registry.ts'
 import { blockDragId } from '../editor/dnd.ts'
-import { getActivePage, useEditorStore } from '../editor/store.ts'
+import { selectActivePage, useEditorStore } from '../editor/store.ts'
+import { useI18n } from '../editor/useI18n.ts'
 import { LayerTree } from './LayerTree'
 
-function BlockButton({ item, onAdd }: { item: BlockDef; onAdd: () => void }) {
+function BlockButton({ item, onAdd, label }: { item: BlockDef; onAdd: () => void; label: string }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: blockDragId(item.type),
     data: { kind: 'block', type: item.type },
@@ -15,51 +16,51 @@ function BlockButton({ item, onAdd }: { item: BlockDef; onAdd: () => void }) {
       ref={setNodeRef}
       type="button"
       onClick={onAdd}
-      className="cursor-grab rounded-md border border-neutral-200 bg-neutral-50 px-2 py-3 text-center text-xs text-neutral-600 hover:border-blue-400 hover:bg-blue-50"
+      className="cursor-grab rounded-md border border-neutral-200 bg-neutral-50 px-2 py-3 text-center text-xs text-neutral-600 hover:border-blue-400 hover:bg-blue-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-blue-400 dark:hover:bg-neutral-700"
       style={{ opacity: isDragging ? 0.45 : 1 }}
       {...listeners}
       {...attributes}
     >
-      {item.label}
+      {label}
     </button>
   )
 }
 
 export function RightPanel() {
+  const { t } = useI18n()
   const addBlock = useEditorStore((s) => s.addBlock)
   const lastInsertError = useEditorStore((s) => s.lastInsertError)
-  const project = useEditorStore((s) => s.project)
   const selectedId = useEditorStore((s) => s.selectedId)
   const dropPreview = useEditorStore((s) => s.dropPreview)
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
   const tab = useEditorStore((s) => s.rightTab)
   const setTab = useEditorStore((s) => s.setRightTab)
-  const page = getActivePage(project)
+  const page = useEditorStore(selectActivePage)
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-l border-neutral-200 bg-white">
-      <div className="flex items-center gap-1 border-b border-neutral-200 p-2 text-sm">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-center gap-1 border-b border-neutral-200 p-2 text-sm dark:border-neutral-800">
         <button
           type="button"
           onClick={() => setTab('blocks')}
           className={
             tab === 'blocks'
-              ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900'
-              : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50'
+              ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
+              : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
           }
         >
-          Blocks
+          {t('tabs.blocks')}
         </button>
         <button
           type="button"
           onClick={() => setTab('outline')}
           className={
             tab === 'outline'
-              ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900'
-              : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50'
+              ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
+              : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
           }
         >
-          Outline
+          {t('tabs.outline')}
         </button>
       </div>
 
@@ -67,16 +68,21 @@ export function RightPanel() {
         {tab === 'blocks' ? (
           <>
             {lastInsertError ? (
-              <p className="mb-3 rounded-md bg-red-50 px-2 py-1.5 text-xs text-red-600">
+              <p className="mb-3 rounded-md bg-red-50 px-2 py-1.5 text-xs text-red-600 dark:bg-red-950 dark:text-red-400">
                 {lastInsertError}
               </p>
             ) : null}
             {BLOCK_GROUPS.map((group) => (
               <section key={group.id} className="mb-4">
-                <h3 className="mb-2 text-xs font-semibold text-neutral-400">{group.label}</h3>
+                <h3 className="mb-2 text-xs font-semibold text-neutral-400">{t(`group.${group.id}`)}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {group.items.map((item) => (
-                    <BlockButton key={item.type} item={item} onAdd={() => addBlock(item.type)} />
+                    <BlockButton
+                      key={item.type}
+                      item={item}
+                      label={t(`block.${item.type}`)}
+                      onAdd={() => addBlock(item.type)}
+                    />
                   ))}
                 </div>
               </section>
@@ -90,7 +96,7 @@ export function RightPanel() {
             onSelect={setSelectedId}
           />
         ) : (
-          <p className="text-xs text-neutral-400">لا توجد صفحة</p>
+          <p className="text-xs text-neutral-400">{t('panel.noPage')}</p>
         )}
       </div>
     </aside>

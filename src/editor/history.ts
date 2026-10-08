@@ -6,6 +6,7 @@ export const UPDATE_COALESCE_MS = 800
 export type EditorSnapshot = {
   project: Project
   selectedId: string | null
+  activePageId: string | null
 }
 
 export type HistoryState = {
@@ -25,8 +26,12 @@ export function emptyHistory(): HistoryState {
   return { past: [], future: [] }
 }
 
-export function snapshotOf(project: Project, selectedId: string | null): EditorSnapshot {
-  return { project, selectedId }
+export function snapshotOf(
+  project: Project,
+  selectedId: string | null,
+  activePageId: string | null = project.pages[0]?.id ?? null,
+): EditorSnapshot {
+  return { project, selectedId, activePageId }
 }
 
 export function canUndo(history: HistoryState): boolean {
