@@ -1,5 +1,6 @@
 import { ANIMATION_SCRIPT, hasScrollAnimation, normalizeAnimation, renderAnimationCss } from './animation.ts'
 import { filterStyle, toKebabCase } from './cssWhitelist.ts'
+import { resolveMediaSrc } from './assets.ts'
 import { pageFileName, resolveHref } from './pages.ts'
 import type { Node, NodeStyle, Page, Project } from './types.ts'
 
@@ -83,11 +84,15 @@ export function renderHtml(node: Node, project?: Project, resolveLinks = false):
       return `${openTag('a', node, `${attr('href', href)}${attr('target', p.target)}${p.target === '_blank' ? ' rel="noopener noreferrer"' : ''}`)}${escapeHtml(p.text ?? '')}</a>`
     }
     case 'image':
-      return voidTag('img', node, `${attr('src', p.src ?? '')}${attr('alt', p.alt ?? '')}`)
+      return voidTag(
+        'img',
+        node,
+        `${attr('src', resolveMediaSrc(project, p.src))}${attr('alt', p.alt ?? '')}`,
+      )
     case 'icon':
       return `${openTag('span', node, `${attr('role', 'img')}${attr('aria-label', p.label ?? '')}`)}${escapeHtml(p.text ?? '')}</span>`
     case 'video':
-      return `${openTag('video', node, `${attr('src', p.src ?? '')}${attr('poster', p.poster)}${attr('controls', p.controls !== false)}${attr('autoplay', p.autoplay)}${attr('loop', p.loop)}`)}</video>`
+      return `${openTag('video', node, `${attr('src', resolveMediaSrc(project, p.src))}${attr('poster', resolveMediaSrc(project, p.poster))}${attr('controls', p.controls !== false)}${attr('autoplay', p.autoplay)}${attr('loop', p.loop)}`)}</video>`
     case 'button':
       return `${openTag('button', node, attr('type', p.type ?? 'button'))}${escapeHtml(p.text ?? '')}</button>`
     case 'input': {

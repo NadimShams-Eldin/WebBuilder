@@ -74,6 +74,28 @@ export {
   type HistoryState,
 } from './history.ts'
 export {
+  addAssetToProject,
+  assetHref,
+  findAsset,
+  isAssetHref,
+  parseAssetHref,
+  removeAssetFromProject,
+  resolveMediaSrc,
+} from './assets.ts'
+export {
+  loadPersistedSession,
+  parsePersistedSession,
+  PROJECT_STORAGE_KEY,
+  savePersistedSession,
+  serializeSession,
+} from './persist.ts'
+export {
+  parseProjectJson,
+  projectFileName,
+  sanitizeProject,
+  serializeProject,
+} from './projectJson.ts'
+export {
   addPageToProject,
   findPage,
   internalHref,

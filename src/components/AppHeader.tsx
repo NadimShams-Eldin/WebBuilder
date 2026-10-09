@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { selectActivePage, selectCanRedo, selectCanUndo, useEditorStore } from '../editor/store.ts'
 import { useI18n } from '../editor/useI18n.ts'
 import { PageSwitcher } from './PageSwitcher.tsx'
+import { ProjectIO } from './ProjectIO.tsx'
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
@@ -76,6 +77,7 @@ export function AppHeader() {
           </button>
           </nav>
         <PageSwitcher />
+        <ProjectIO />
       </div>
 
       <div className="flex items-center gap-2">

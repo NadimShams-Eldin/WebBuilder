@@ -5,7 +5,10 @@ import {
   type EditorTheme,
   type Locale,
 } from './chromePrefs.ts'
+import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './assets.ts'
 import { createDemoProject } from './demoProject.ts'
+import { loadPersistedSession, savePersistedSession } from './persist.ts'
+import { parseProjectJson, serializeProject } from './projectJson.ts'
 import {
   canRedo,
   canUndo,
@@ -36,7 +39,7 @@ import {
   type DropIntent,
   type NodePatch,
 } from './tree.ts'
-import type { NodeType, Page, Project } from './types.ts'
+import type { Asset, NodeType, Page, Project } from './types.ts'
 import {
   clampZoom,
   DEVICE_WIDTHS,
@@ -82,6 +85,10 @@ export type EditorState = {
   renamePage: (pageId: string, name: string) => boolean
   setPageSlug: (pageId: string, slug: string) => boolean
   loadDemo: () => void
+  importProjectJson: (raw: string) => boolean
+  exportProjectJson: () => string
+  addAsset: (file: File) => Promise<Asset | null>
+  removeAsset: (assetId: string) => boolean
   undo: () => boolean
   redo: () => boolean
 }
@@ -107,6 +114,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     coalesce =
       kind === 'update' && selectedId ? { kind: 'update', id: selectedId, at: now } : null
     set({ ...patch, selectedId, activePageId, history })
+    savePersistedSession({ project: patch.project, activePageId })
   }
 
   const initialViewport = loadViewportPrefs()
@@ -114,12 +122,13 @@ export const useEditorStore = create<EditorState>((set, get) => {
   const persistChrome = (theme: EditorTheme, locale: Locale) => {
     saveChromePrefs({ theme, locale })
   }
-  const demo = createDemoProject()
+  const persisted = loadPersistedSession()
+  const initialProject = persisted?.project ?? createDemoProject()
 
   return {
-    project: demo,
+    project: initialProject,
     selectedId: null,
-    activePageId: demo.pages[0]?.id ?? null,
+    activePageId: persisted?.activePageId ?? initialProject.pages[0]?.id ?? null,
     device: initialViewport.device,
     zoom: initialViewport.zoom,
     lastInsertError: null,
@@ -141,10 +150,12 @@ export const useEditorStore = create<EditorState>((set, get) => {
       set({ selectedId, lastInsertError: null })
     },
     setActivePage: (pageId) => {
-      const page = resolvePage(get().project, pageId)
+      const state = get()
+      const page = resolvePage(state.project, pageId)
       if (!page) return
       coalesce = null
       set({ activePageId: page.id, selectedId: null, lastInsertError: null, dropPreview: null })
+      savePersistedSession({ project: state.project, activePageId: page.id })
     },
     setDevice: (device) => {
       saveViewportPrefs({ device, zoom: get().zoom })
@@ -298,6 +309,41 @@ export const useEditorStore = create<EditorState>((set, get) => {
         dropPreview: null,
       })
     },
+    importProjectJson: (raw) => {
+      const { locale } = get()
+      const parsed = parseProjectJson(raw)
+      if (!parsed.ok) {
+        set({ lastInsertError: translate(locale, `error.import.${parsed.error}`) })
+        return false
+      }
+      commit({
+        project: parsed.project,
+        activePageId: parsed.project.pages[0]?.id ?? null,
+        selectedId: null,
+        lastInsertError: null,
+        dropPreview: null,
+      })
+      return true
+    },
+    exportProjectJson: () => serializeProject(get().project),
+    addAsset: async (file) => {
+      const { project, locale } = get()
+      const result = await readFileAsAsset(file)
+      if (!result.ok) {
+        set({ lastInsertError: translate(locale, `error.asset.${result.error}`) })
+        return null
+      }
+      const next = addAssetToProject(project, result.asset)
+      const asset = next.assets[next.assets.length - 1]
+      commit({ project: next, lastInsertError: null })
+      return asset
+    },
+    removeAsset: (assetId) => {
+      const { project } = get()
+      if (!project.assets.some((asset) => asset.id === assetId)) return false
+      commit({ project: removeAssetFromProject(project, assetId) })
+      return true
+    },
     undo: () => {
       const state = get()
       const result = undoHistory(
@@ -313,6 +359,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
         history: result.history,
         lastInsertError: null,
         dropPreview: null,
+      })
+      savePersistedSession({
+        project: result.snapshot.project,
+        activePageId: result.snapshot.activePageId,
       })
       return true
     },
@@ -331,6 +381,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
         history: result.history,
         lastInsertError: null,
         dropPreview: null,
+      })
+      savePersistedSession({
+        project: result.snapshot.project,
+        activePageId: result.snapshot.activePageId,
       })
       return true
     },

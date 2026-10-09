@@ -9,6 +9,7 @@ import {
   isAnimationTrigger,
   normalizeAnimation,
 } from '../editor/animation.ts'
+import { assetHref, isAssetHref, parseAssetHref } from '../editor/assets.ts'
 import { internalHref, isInternalHref, parseInternalHref } from '../editor/pages.ts'
 import { selectActivePage, useEditorStore } from '../editor/store.ts'
 import { findNode } from '../editor/tree.ts'
@@ -121,6 +122,86 @@ function inputToProp(key: string, raw: string): NodeProps {
 function styleToInput(node: Node, prop: string): string {
   const value = node.style[prop]
   return value === undefined ? '' : String(value)
+}
+
+function MediaSrcFields({
+  node,
+  project,
+  field,
+  onChange,
+  t,
+}: {
+  node: Node
+  project: Project
+  field: 'src' | 'poster'
+  onChange: (value: string) => void
+  t: (key: string) => string
+}) {
+  const current = field === 'src' ? node.props.src : node.props.poster
+  const assetId = parseAssetHref(current) ?? ''
+  const mode = isAssetHref(current) ? 'asset' : 'custom'
+  const addAsset = useEditorStore((s) => s.addAsset)
+
+  return (
+    <>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          {t(field === 'src' ? 'prop.src' : 'prop.poster')}
+        </span>
+        <FieldControl
+          kind="select"
+          value={mode}
+          options={[
+            { value: 'asset', label: t('assets.label') },
+            { value: 'custom', label: t('assets.custom') },
+          ]}
+          onChange={(value) => {
+            if (value === 'asset') {
+              const first = project.assets[0]
+              onChange(first ? assetHref(first.id) : '')
+              return
+            }
+            onChange('')
+          }}
+        />
+      </label>
+      {mode === 'asset' ? (
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('assets.label')}</span>
+          <FieldControl
+            kind="select"
+            value={assetId}
+            options={[
+              { value: '', label: t('assets.none') },
+              ...project.assets.map((asset) => ({ value: asset.id, label: asset.name })),
+            ]}
+            onChange={(value) => onChange(value ? assetHref(value) : '')}
+          />
+          <label className="mt-1 cursor-pointer text-xs text-blue-600 hover:underline dark:text-blue-400">
+            {t('assets.upload')}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                event.target.value = ''
+                if (!file) return
+                addAsset(file).then((asset) => {
+                  if (asset) onChange(assetHref(asset.id))
+                })
+              }}
+            />
+          </label>
+        </label>
+      ) : (
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('assets.custom')}</span>
+          <FieldControl kind="text" value={current ?? ''} onChange={onChange} />
+        </label>
+      )}
+    </>
+  )
 }
 
 function LinkHrefFields({
@@ -342,8 +423,31 @@ export function LeftPanel() {
                     onChange={(href) => updateSelected({ props: { href } })}
                   />
                 ) : null}
+                {node.type === 'image' || node.type === 'video' ? (
+                  <MediaSrcFields
+                    node={node}
+                    project={project}
+                    field="src"
+                    t={t}
+                    onChange={(src) => updateSelected({ props: { src } })}
+                  />
+                ) : null}
+                {node.type === 'video' ? (
+                  <MediaSrcFields
+                    node={node}
+                    project={project}
+                    field="poster"
+                    t={t}
+                    onChange={(poster) => updateSelected({ props: { poster } })}
+                  />
+                ) : null}
                 {(CONTENT_FIELDS[node.type] ?? [])
-                  .filter((field) => !(node.type === 'link' && field.key === 'href'))
+                  .filter(
+                    (field) =>
+                      !(node.type === 'link' && field.key === 'href') &&
+                      !((node.type === 'image' || node.type === 'video') && field.key === 'src') &&
+                      !(node.type === 'video' && field.key === 'poster'),
+                  )
                   .map((field) => (
                   <label key={field.key} className="flex flex-col gap-1">
                     <span className="text-xs text-neutral-500 dark:text-neutral-400">
