@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --experimental-strip-types --test src/editor/*.test.ts",
+    "test": "node --experimental-strip-types --test src/editor/*.test.ts src/export/*.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@tailwindcss/vite": "^4.3.3",
+    "jszip": "^3.10.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",

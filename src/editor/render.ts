@@ -1,6 +1,6 @@
 import { ANIMATION_SCRIPT, hasScrollAnimation, normalizeAnimation, renderAnimationCss } from './animation.ts'
 import { filterStyle, toKebabCase } from './cssWhitelist.ts'
-import { resolveMediaSrc } from './assets.ts'
+import { parseAssetHref, resolveMediaSrc } from './assets.ts'
 import { pageFileName, resolveHref } from './pages.ts'
 import type { Node, NodeStyle, Page, Project } from './types.ts'
 
@@ -49,20 +49,44 @@ function voidTag(tag: string, node: Node, extra = ''): string {
   return `<${tag} class="${cls}" data-qid="${escapeAttr(node.id)}" data-qtype="${node.type}"${animationAttrs(node)}${extra} />`
 }
 
-function renderChildren(node: Node, project?: Project, resolveLinks = false): string {
-  return node.children.map((child) => renderHtml(child, project, resolveLinks)).join('')
+export type AssetUrlFn = (assetId: string) => string
+
+function mediaSrc(
+  project: Project | undefined,
+  src: string | undefined,
+  assetUrl?: AssetUrlFn,
+): string {
+  if (!src) return ''
+  const assetId = parseAssetHref(src)
+  if (!assetId) return src
+  if (assetUrl) return assetUrl(assetId)
+  return resolveMediaSrc(project, src)
 }
 
-export function renderHtml(node: Node, project?: Project, resolveLinks = false): string {
+function renderChildren(
+  node: Node,
+  project?: Project,
+  resolveLinks = false,
+  assetUrl?: AssetUrlFn,
+): string {
+  return node.children.map((child) => renderHtml(child, project, resolveLinks, assetUrl)).join('')
+}
+
+export function renderHtml(
+  node: Node,
+  project?: Project,
+  resolveLinks = false,
+  assetUrl?: AssetUrlFn,
+): string {
   const p = node.props
 
   switch (node.type) {
     case 'container':
     case 'flex':
     case 'grid':
-      return `${openTag('div', node)}${renderChildren(node, project, resolveLinks)}</div>`
+      return `${openTag('div', node)}${renderChildren(node, project, resolveLinks, assetUrl)}</div>`
     case 'form':
-      return `${openTag('form', node, `${attr('action', p.action ?? '')}${attr('method', p.method ?? 'post')}`)}${renderChildren(node, project, resolveLinks)}</form>`
+      return `${openTag('form', node, `${attr('action', p.action ?? '')}${attr('method', p.method ?? 'post')}`)}${renderChildren(node, project, resolveLinks, assetUrl)}</form>`
     case 'spacer':
       return openTag('div', node) + '</div>'
     case 'divider':
@@ -87,12 +111,12 @@ export function renderHtml(node: Node, project?: Project, resolveLinks = false):
       return voidTag(
         'img',
         node,
-        `${attr('src', resolveMediaSrc(project, p.src))}${attr('alt', p.alt ?? '')}`,
+        `${attr('src', mediaSrc(project, p.src, assetUrl))}${attr('alt', p.alt ?? '')}`,
       )
     case 'icon':
       return `${openTag('span', node, `${attr('role', 'img')}${attr('aria-label', p.label ?? '')}`)}${escapeHtml(p.text ?? '')}</span>`
     case 'video':
-      return `${openTag('video', node, `${attr('src', resolveMediaSrc(project, p.src))}${attr('poster', resolveMediaSrc(project, p.poster))}${attr('controls', p.controls !== false)}${attr('autoplay', p.autoplay)}${attr('loop', p.loop)}`)}</video>`
+      return `${openTag('video', node, `${attr('src', mediaSrc(project, p.src, assetUrl))}${attr('poster', mediaSrc(project, p.poster, assetUrl))}${attr('controls', p.controls !== false)}${attr('autoplay', p.autoplay)}${attr('loop', p.loop)}`)}</video>`
     case 'button':
       return `${openTag('button', node, attr('type', p.type ?? 'button'))}${escapeHtml(p.text ?? '')}</button>`
     case 'input': {
@@ -190,6 +214,33 @@ ${renderHtml(node, project, !editor)}
 ${editor ? EDITOR_SCRIPT : ''}
 ${hasScrollAnimation(node) ? ANIMATION_SCRIPT : ''}
 </body>
+</html>`
+}
+
+export function renderLinkedPageHtml(
+  project: Project,
+  page: Page,
+  options: {
+    stylesheetHref: string
+    scriptHref?: string
+    assetUrl?: AssetUrlFn
+  },
+): string {
+  const title = page.name || project.name
+  const script = options.scriptHref
+    ? `<script src="${escapeAttr(options.scriptHref)}"></script>\n`
+    : ''
+  return `<!DOCTYPE html>
+<html lang="ar" dir="${project.theme.direction}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${escapeHtml(title)}</title>
+<link rel="stylesheet" href="${escapeAttr(options.stylesheetHref)}" />
+</head>
+<body>
+${renderHtml(page.root, project, true, options.assetUrl)}
+${script}</body>
 </html>`
 }
 

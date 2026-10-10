@@ -87,6 +87,7 @@ export type EditorState = {
   loadDemo: () => void
   importProjectJson: (raw: string) => boolean
   exportProjectJson: () => string
+  exportSiteZip: () => Promise<boolean>
   addAsset: (file: File) => Promise<Asset | null>
   removeAsset: (assetId: string) => boolean
   undo: () => boolean
@@ -326,6 +327,18 @@ export const useEditorStore = create<EditorState>((set, get) => {
       return true
     },
     exportProjectJson: () => serializeProject(get().project),
+    exportSiteZip: async () => {
+      const { project, locale } = get()
+      try {
+        const { downloadSiteZip } = await import('../export/zip.ts')
+        await downloadSiteZip(project)
+        set({ lastInsertError: null })
+        return true
+      } catch {
+        set({ lastInsertError: translate(locale, 'error.export.failed') })
+        return false
+      }
+    },
     addAsset: async (file) => {
       const { project, locale } = get()
       const result = await readFileAsAsset(file)

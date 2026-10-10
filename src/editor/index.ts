@@ -4,6 +4,7 @@ export {
   ANIMATION_EFFECT_LABELS,
   ANIMATION_EFFECTS,
   ANIMATION_SCRIPT,
+  ANIMATION_SCRIPT_BODY,
   ANIMATION_TRIGGER_LABELS,
   ANIMATION_TRIGGERS,
   collectAnimated,
@@ -110,7 +111,13 @@ export {
   slugify,
   uniqueSlug,
 } from './pages.ts'
-export { renderCss, renderExportedPages, renderHtml, renderPageHtml } from './render.ts'
+export {
+  renderCss,
+  renderExportedPages,
+  renderHtml,
+  renderLinkedPageHtml,
+  renderPageHtml,
+} from './render.ts'
 export {
   DEVICE_WIDTHS,
   getActivePage,

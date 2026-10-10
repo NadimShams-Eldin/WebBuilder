@@ -17,6 +17,7 @@ export function ProjectIO() {
   const { t } = useI18n()
   const inputRef = useRef<HTMLInputElement>(null)
   const exportProjectJson = useEditorStore((s) => s.exportProjectJson)
+  const exportSiteZip = useEditorStore((s) => s.exportSiteZip)
   const importProjectJson = useEditorStore((s) => s.importProjectJson)
   const project = useEditorStore((s) => s.project)
 
@@ -24,7 +25,17 @@ export function ProjectIO() {
     <div className="flex items-center gap-1 rounded-md border border-neutral-200 dark:border-neutral-700">
       <button
         type="button"
-        className="px-2 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        className="px-2 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
+        title={t('project.exportSite')}
+        onClick={() => {
+          void exportSiteZip()
+        }}
+      >
+        {t('project.exportSite')}
+      </button>
+      <button
+        type="button"
+        className="border-s border-neutral-200 px-2 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
         title={t('project.export')}
         onClick={() => downloadJson(projectFileName(project), exportProjectJson())}
       >

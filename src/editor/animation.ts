@@ -146,8 +146,7 @@ export function renderAnimationCss(project: Project): string {
   return lines.join('\n')
 }
 
-export const ANIMATION_SCRIPT = `<script>
-(function () {
+export const ANIMATION_SCRIPT_BODY = `(function () {
   var nodes = document.querySelectorAll('[data-qanim="scroll"]');
   if (!nodes.length) return;
   function show(el) { el.classList.add('q-in'); }
@@ -164,4 +163,7 @@ export const ANIMATION_SCRIPT = `<script>
   }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
   nodes.forEach(function (el) { io.observe(el); });
 })();
-</script>`
+`
+
+export const ANIMATION_SCRIPT = `<script>
+${ANIMATION_SCRIPT_BODY}</script>`
