@@ -51,7 +51,7 @@ import {
 export type { Device }
 export { DEVICE_WIDTHS }
 
-export type RightTab = 'blocks' | 'outline'
+export type RightTab = 'blocks' | 'outline' | 'extracted'
 
 export type EditorState = {
   project: Project
@@ -78,6 +78,7 @@ export type EditorState = {
   dropBlock: (type: NodeType, intent: DropIntent) => boolean
   moveNodeTo: (nodeId: string, intent: DropIntent) => boolean
   updateSelected: (patch: NodePatch) => void
+  updateNodeById: (id: string, patch: NodePatch) => void
   deleteSelected: () => boolean
   clearPage: () => boolean
   addPage: (name?: string) => boolean
@@ -102,18 +103,17 @@ export const useEditorStore = create<EditorState>((set, get) => {
       string,
       unknown
     >,
-    kind?: 'update',
+    coalesceId?: string | null,
   ) => {
     const state = get()
     const selectedId = patch.selectedId !== undefined ? patch.selectedId : state.selectedId
     const activePageId = patch.activePageId !== undefined ? patch.activePageId : state.activePageId
     const now = Date.now()
-    const reuse = kind === 'update' && shouldCoalesceUpdate(coalesce, state.selectedId, now)
+    const reuse = Boolean(coalesceId) && shouldCoalesceUpdate(coalesce, coalesceId ?? null, now)
     const history = reuse
       ? state.history
       : pushHistory(state.history, snapshotOf(state.project, state.selectedId, state.activePageId))
-    coalesce =
-      kind === 'update' && selectedId ? { kind: 'update', id: selectedId, at: now } : null
+    coalesce = coalesceId ? { kind: 'update', id: coalesceId, at: now } : null
     set({ ...patch, selectedId, activePageId, history })
     savePersistedSession({ project: patch.project, activePageId })
   }
@@ -225,7 +225,12 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const { project, selectedId, activePageId } = get()
       if (!selectedId) return
       const next = updateNodeInProject(project, selectedId, patch, activePageId)
-      if (next) commit({ project: next }, 'update')
+      if (next) commit({ project: next }, selectedId)
+    },
+    updateNodeById: (id, patch) => {
+      const { project, activePageId } = get()
+      const next = updateNodeInProject(project, id, patch, activePageId)
+      if (next) commit({ project: next, selectedId: id }, id)
     },
     deleteSelected: () => {
       const { project, selectedId, activePageId, locale } = get()

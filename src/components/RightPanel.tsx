@@ -1,8 +1,9 @@
 import { useDraggable } from '@dnd-kit/core'
 import { BLOCK_GROUPS, type BlockDef } from '../blocks/registry.ts'
 import { blockDragId } from '../editor/dnd.ts'
-import { selectActivePage, useEditorStore } from '../editor/store.ts'
+import { selectActivePage, useEditorStore, type RightTab } from '../editor/store.ts'
 import { useI18n } from '../editor/useI18n.ts'
+import { ExtractedContent } from './ExtractedContent'
 import { LayerTree } from './LayerTree'
 
 function BlockButton({ item, onAdd, label }: { item: BlockDef; onAdd: () => void; label: string }) {
@@ -36,31 +37,22 @@ export function RightPanel() {
   const tab = useEditorStore((s) => s.rightTab)
   const setTab = useEditorStore((s) => s.setRightTab)
   const page = useEditorStore(selectActivePage)
+  const tabClass = (id: RightTab) =>
+    tab === id
+      ? 'flex-1 rounded-md bg-neutral-100 px-2 py-1.5 text-xs font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
+      : 'flex-1 rounded-md px-2 py-1.5 text-xs text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <aside className="flex h-full w-72 shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-center gap-1 border-b border-neutral-200 p-2 text-sm dark:border-neutral-800">
-        <button
-          type="button"
-          onClick={() => setTab('blocks')}
-          className={
-            tab === 'blocks'
-              ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
-              : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
-          }
-        >
+        <button type="button" onClick={() => setTab('blocks')} className={tabClass('blocks')}>
           {t('tabs.blocks')}
         </button>
-        <button
-          type="button"
-          onClick={() => setTab('outline')}
-          className={
-            tab === 'outline'
-              ? 'flex-1 rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
-              : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
-          }
-        >
+        <button type="button" onClick={() => setTab('outline')} className={tabClass('outline')}>
           {t('tabs.outline')}
+        </button>
+        <button type="button" onClick={() => setTab('extracted')} className={tabClass('extracted')}>
+          {t('tabs.extracted')}
         </button>
       </div>
 
@@ -88,7 +80,9 @@ export function RightPanel() {
               </section>
             ))}
           </>
-        ) : page ? (
+        ) : !page ? (
+          <p className="text-xs text-neutral-400">{t('panel.noPage')}</p>
+        ) : tab === 'outline' ? (
           <LayerTree
             root={page.root}
             selectedId={selectedId}
@@ -96,7 +90,7 @@ export function RightPanel() {
             onSelect={setSelectedId}
           />
         ) : (
-          <p className="text-xs text-neutral-400">{t('panel.noPage')}</p>
+          <ExtractedContent root={page.root} />
         )}
       </div>
     </aside>

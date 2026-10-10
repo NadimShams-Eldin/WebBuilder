@@ -27,6 +27,14 @@ export {
   resetNodeIdSeq,
 } from './createNode.ts'
 export {
+  collectExtractedFields,
+  extractedFieldValue,
+  propsFromExtractedValue,
+  type ExtractedField,
+  type ExtractedFieldKind,
+  type ExtractedPropKey,
+} from './extractedContent.ts'
+export {
   addNodeToPage,
   addNodeToProject,
   canDrop,
