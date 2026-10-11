@@ -125,6 +125,7 @@ export {
   renderHtml,
   renderLinkedPageHtml,
   renderPageHtml,
+  type PageHtmlMode,
 } from './render.ts'
 export {
   DEVICE_WIDTHS,
@@ -136,6 +137,7 @@ export {
   type Device,
   type EditorState,
   type RightTab,
+  type WorkspaceMode,
 } from './store.ts'
 export {
   clampZoom,

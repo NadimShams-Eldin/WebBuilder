@@ -231,11 +231,45 @@ describe('renderCss', () => {
 
 describe('renderPageHtml', () => {
   it('includes the editor script only in editor mode', () => {
-    const html = renderPageHtml(projectWith(tree()), tree(), true)
-    const exported = renderPageHtml(projectWith(tree()), tree(), false)
+    const html = renderPageHtml(projectWith(tree()), tree(), 'editor')
+    const exported = renderPageHtml(projectWith(tree()), tree(), 'export')
     assert.ok(html.includes('qitma-canvas'))
+    assert.ok(html.includes("'select'"))
     assert.equal(exported.includes('qitma-canvas'), false)
     assert.ok(exported.includes('<h1 class="q-h1"'))
+  })
+
+  it('keeps internal page links in preview without selection chrome', () => {
+    const about = { id: 'about', name: 'الأصول', slug: 'about', root: tree() }
+    const homeRoot = {
+      ...tree(),
+      children: [
+        {
+          id: 'lnk',
+          type: 'link' as const,
+          name: 'رابط',
+          props: { text: 'الأصول', href: 'page:about', target: '_self' as const },
+          style: {},
+          animation: null,
+          children: [],
+        },
+      ],
+    }
+    const project = {
+      ...projectWith(homeRoot),
+      pages: [
+        { id: 'p1', name: 'رئيسية', slug: 'index', root: homeRoot },
+        about,
+      ],
+    }
+    const preview = renderPageHtml(project, homeRoot, 'preview', project.pages[0])
+    assert.ok(preview.includes('href="page:about"'))
+    assert.ok(preview.includes("'navigate'"))
+    assert.equal(preview.includes("'select'"), false)
+    assert.ok(preview.includes('qitma-canvas'))
+    const exported = renderPageHtml(project, homeRoot, 'export', project.pages[0])
+    assert.ok(exported.includes('href="about.html"'))
+    assert.equal(exported.includes('qitma-canvas'), false)
   })
 })
 

@@ -10,6 +10,8 @@ import { useEditorStore } from './editor/store.ts'
 export default function App() {
   const theme = useEditorStore((s) => s.theme)
   const locale = useEditorStore((s) => s.locale)
+  const workspace = useEditorStore((s) => s.workspace)
+  const preview = workspace === 'preview'
   const dir = localeDir(locale)
 
   useEffect(() => {
@@ -27,9 +29,9 @@ export default function App() {
       >
         <AppHeader />
         <div className="flex min-h-0 flex-1">
-          <RightPanel />
+          {preview ? null : <RightPanel />}
           <CanvasArea />
-          <LeftPanel />
+          {preview ? null : <LeftPanel />}
         </div>
       </div>
     </EditorDnd>

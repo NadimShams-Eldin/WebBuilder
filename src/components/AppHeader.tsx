@@ -24,12 +24,21 @@ export function AppHeader() {
   const deleteSelected = useEditorStore((s) => s.deleteSelected)
   const clearPage = useEditorStore((s) => s.clearPage)
   const loadDemo = useEditorStore((s) => s.loadDemo)
+  const workspace = useEditorStore((s) => s.workspace)
+  const setWorkspace = useEditorStore((s) => s.setWorkspace)
+  const preview = workspace === 'preview'
   const page = useEditorStore(selectActivePage)
-  const canDelete = Boolean(selectedId && page && selectedId !== page.root.id)
-  const canClear = Boolean(page && page.root.children.length > 0)
+  const canDelete = !preview && Boolean(selectedId && page && selectedId !== page.root.id)
+  const canClear = !preview && Boolean(page && page.root.children.length > 0)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && preview) {
+        event.preventDefault()
+        setWorkspace('compose')
+        return
+      }
+      if (preview) return
       if (isEditableTarget(event.target)) return
       if ((event.ctrlKey || event.metaKey) && !event.altKey) {
         const key = event.key.toLowerCase()
@@ -57,7 +66,7 @@ export function AppHeader() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [undo, redo, canDelete, deleteSelected])
+  }, [undo, redo, canDelete, deleteSelected, preview, setWorkspace])
 
   const chromeBtn =
     'rounded-md px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800'
@@ -69,18 +78,35 @@ export function AppHeader() {
       <div className="flex items-center gap-4">
         <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">{t('app.name')}</span>
         <nav className="flex items-center gap-1 text-sm">
-          <button className="rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100">
+          <button
+            type="button"
+            className={
+              !preview
+                ? 'rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
+                : 'rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
+            }
+            onClick={() => setWorkspace('compose')}
+          >
             {t('header.compose')}
           </button>
-          <button className="rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800">
+          <button
+            type="button"
+            className={
+              preview
+                ? 'rounded-md bg-neutral-100 px-3 py-1.5 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
+                : 'rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
+            }
+            onClick={() => setWorkspace('preview')}
+          >
             {t('header.preview')}
           </button>
-          </nav>
+        </nav>
         <PageSwitcher />
-        <ProjectIO />
+        {preview ? null : <ProjectIO />}
       </div>
 
       <div className="flex items-center gap-2">
+        {preview ? null : (
         <div className="flex items-center gap-1 rounded-md border border-neutral-200 dark:border-neutral-700">
           <button
             type="button"
@@ -117,6 +143,7 @@ export function AppHeader() {
             {t('tools.demo')}
           </button>
         </div>
+        )}
         <div className="flex items-center gap-1 rounded-md border border-neutral-200 dark:border-neutral-700">
           <button
             type="button"
@@ -149,6 +176,7 @@ export function AppHeader() {
             {t('header.locale.en')}
           </button>
         </div>
+        {preview ? null : (
         <div className="flex items-center gap-1 rounded-md border border-neutral-200 dark:border-neutral-700">
           <button
             type="button"
@@ -177,7 +205,12 @@ export function AppHeader() {
             ↶
           </button>
         </div>
-        <button className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
+        )}
+        <button
+          type="button"
+          className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          onClick={() => setWorkspace('preview')}
+        >
           {t('header.publish')}
         </button>
       </div>

@@ -53,6 +53,8 @@ export { DEVICE_WIDTHS }
 
 export type RightTab = 'blocks' | 'outline' | 'extracted'
 
+export type WorkspaceMode = 'compose' | 'preview'
+
 export type EditorState = {
   project: Project
   selectedId: string | null
@@ -60,6 +62,7 @@ export type EditorState = {
   device: Device
   zoom: number
   lastInsertError: string | null
+  workspace: WorkspaceMode
   rightTab: RightTab
   dropPreview: DropIntent | null
   history: HistoryState
@@ -70,6 +73,7 @@ export type EditorState = {
   setActivePage: (pageId: string) => void
   setDevice: (device: Device) => void
   setZoom: (zoom: number) => void
+  setWorkspace: (mode: WorkspaceMode) => void
   setRightTab: (tab: RightTab) => void
   setDropPreview: (preview: DropIntent | null) => void
   setTheme: (theme: EditorTheme) => void
@@ -133,6 +137,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     device: initialViewport.device,
     zoom: initialViewport.zoom,
     lastInsertError: null,
+    workspace: 'compose',
     rightTab: 'blocks',
     dropPreview: null,
     history: emptyHistory(),
@@ -166,6 +171,14 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const next = clampZoom(zoom)
       saveViewportPrefs({ device: get().device, zoom: next })
       set({ zoom: next })
+    },
+    setWorkspace: (workspace) => {
+      coalesce = null
+      if (workspace === 'preview') {
+        set({ workspace, selectedId: null, dropPreview: null, lastInsertError: null })
+        return
+      }
+      set({ workspace })
     },
     setRightTab: (rightTab) => set({ rightTab }),
     setDropPreview: (dropPreview) => set({ dropPreview }),

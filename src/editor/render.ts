@@ -192,13 +192,33 @@ const EDITOR_SCRIPT = `<script>
 })();
 </script>`
 
+const PREVIEW_SCRIPT = `<script>
+(function () {
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    var link = target && target.closest ? target.closest('a[href]') : null;
+    if (!link) return;
+    var href = link.getAttribute('href') || '';
+    if (href.indexOf('page:') !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.parent.postMessage({ source: 'qitma-canvas', type: 'navigate', pageId: href.slice(5) }, '*');
+  }, true);
+  document.addEventListener('submit', function (event) { event.preventDefault(); }, true);
+})();
+</script>`
+
+export type PageHtmlMode = 'editor' | 'preview' | 'export'
+
 export function renderPageHtml(
   project: Project,
   node: Node,
-  editor = false,
+  mode: PageHtmlMode = 'export',
   page?: Page,
 ): string {
   const title = page?.name || project.name
+  const resolveLinks = mode === 'export'
+  const frameScript = mode === 'editor' ? EDITOR_SCRIPT : mode === 'preview' ? PREVIEW_SCRIPT : ''
   return `<!DOCTYPE html>
 <html lang="ar" dir="${project.theme.direction}">
 <head>
@@ -210,8 +230,8 @@ ${renderCss(project)}
 </style>
 </head>
 <body>
-${renderHtml(node, project, !editor)}
-${editor ? EDITOR_SCRIPT : ''}
+${renderHtml(node, project, resolveLinks)}
+${frameScript}
 ${hasScrollAnimation(node) ? ANIMATION_SCRIPT : ''}
 </body>
 </html>`
@@ -252,6 +272,6 @@ export type ExportedPage = {
 export function renderExportedPages(project: Project): ExportedPage[] {
   return project.pages.map((page) => ({
     fileName: pageFileName(page),
-    html: renderPageHtml(project, page.root, false, page),
+    html: renderPageHtml(project, page.root, 'export', page),
   }))
 }

@@ -81,7 +81,7 @@ describe('multi-page project', () => {
     const editor = renderHtml(home.root)
     assert.ok(editor.includes(`href="${internalHref(about.id)}"`))
 
-    const exported = renderPageHtml(project, home.root, false, home)
+    const exported = renderPageHtml(project, home.root, 'export', home)
     assert.ok(exported.includes('href="about.html"'))
     assert.equal(exported.includes(internalHref(about.id)), false)
     assert.ok(exported.includes(`<title>${home.name}</title>`))

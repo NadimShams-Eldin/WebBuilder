@@ -38,6 +38,8 @@ export function Canvas() {
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
   const setActivePage = useEditorStore((s) => s.setActivePage)
   const setRightTab = useEditorStore((s) => s.setRightTab)
+  const workspace = useEditorStore((s) => s.workspace)
+  const preview = workspace === 'preview'
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const { active } = useDndContext()
   const dragging = Boolean(active)
@@ -47,8 +49,8 @@ export function Canvas() {
 
   const page = getActivePage(project, activePageId)
   const srcDoc = useMemo(
-    () => (page ? renderPageHtml(project, page.root, true, page) : ''),
-    [project, page],
+    () => (page ? renderPageHtml(project, page.root, preview ? 'preview' : 'editor', page) : ''),
+    [project, page, preview],
   )
 
   const width = DEVICE_WIDTHS[device]
@@ -62,16 +64,16 @@ export function Canvas() {
 
   const syncOverlay = useCallback(() => {
     const doc = iframeRef.current?.contentDocument
-    if (!doc || !selectedId) {
+    if (!doc || !selectedId || preview) {
       setOverlay(null)
       return
     }
     setOverlay(queryNodeRect(doc, selectedId))
-  }, [selectedId])
+  }, [selectedId, preview])
 
   const syncDrop = useCallback(() => {
     const doc = iframeRef.current?.contentDocument
-    if (!doc || !dropPreview) {
+    if (!doc || !dropPreview || preview) {
       setDropBox(null)
       return
     }
@@ -83,7 +85,7 @@ export function Canvas() {
     setDropBox(
       indicatorBox(rect, dropPreview.placement, dropPreview.axis ?? 'vertical', dropPreview.rtl ?? true),
     )
-  }, [dropPreview])
+  }, [dropPreview, preview])
 
   useEffect(() => {
     registerCanvasIframe(iframeRef.current)
@@ -119,13 +121,13 @@ export function Canvas() {
         setActivePage(event.data.pageId)
         return
       }
-      if (event.data.type !== 'select') return
+      if (preview || event.data.type !== 'select') return
       setSelectedId(event.data.id ?? null)
       if (event.data.id) setRightTab('outline')
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [setSelectedId, setRightTab, setActivePage])
+  }, [preview, setSelectedId, setRightTab, setActivePage])
 
   return (
     <div
@@ -146,6 +148,7 @@ export function Canvas() {
           data-width={width}
           style={{ pointerEvents: dragging ? 'none' : 'auto' }}
         />
+        {preview ? null : (
         <div
           className="pointer-events-none absolute inset-0"
           data-overlay="selection"
@@ -178,6 +181,7 @@ export function Canvas() {
             />
           ) : null}
         </div>
+        )}
       </div>
     </div>
   )

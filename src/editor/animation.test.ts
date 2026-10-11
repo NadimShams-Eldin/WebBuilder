@@ -68,7 +68,7 @@ describe('render with animation', () => {
     assert.ok(html.includes('data-qanim="scroll"'))
     assert.ok(html.includes('data-qeffect="fade"'))
 
-    const page = renderPageHtml(project, root, false)
+    const page = renderPageHtml(project, root, 'export')
     assert.ok(page.includes('IntersectionObserver'))
     assert.ok(page.includes('q-anim-fade'))
     assert.equal(page.includes('qitma-canvas'), false)
@@ -77,7 +77,7 @@ describe('render with animation', () => {
     const emptyRoot = createNode('container', 'r')
     emptyRoot.children = [plain]
     project.pages[0].root = emptyRoot
-    const exported = renderPageHtml(project, emptyRoot, false)
+    const exported = renderPageHtml(project, emptyRoot, 'export')
     assert.equal(exported.includes('IntersectionObserver'), false)
   })
 })
