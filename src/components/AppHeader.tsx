@@ -22,6 +22,7 @@ export function AppHeader() {
   const setLocale = useEditorStore((s) => s.setLocale)
   const selectedId = useEditorStore((s) => s.selectedId)
   const deleteSelected = useEditorStore((s) => s.deleteSelected)
+  const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
   const clearPage = useEditorStore((s) => s.clearPage)
   const loadDemo = useEditorStore((s) => s.loadDemo)
   const workspace = useEditorStore((s) => s.workspace)
@@ -57,6 +58,12 @@ export function AppHeader() {
           redo()
           return
         }
+        if (key === 'd') {
+          if (!canDelete) return
+          event.preventDefault()
+          duplicateSelected()
+          return
+        }
       }
       if (event.key === 'Delete' || event.key === 'Backspace') {
         if (!canDelete) return
@@ -66,7 +73,7 @@ export function AppHeader() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [undo, redo, canDelete, deleteSelected, preview, setWorkspace])
+  }, [undo, redo, canDelete, deleteSelected, duplicateSelected, preview, setWorkspace])
 
   const chromeBtn =
     'rounded-md px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800'
@@ -120,6 +127,19 @@ export function AppHeader() {
             onClick={() => deleteSelected()}
           >
             {t('tools.delete')}
+          </button>
+          <button
+            type="button"
+            className={
+              canDelete
+                ? 'px-2 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800'
+                : 'px-2 py-1.5 text-xs text-neutral-300 dark:text-neutral-600'
+            }
+            title={`${t('tools.duplicate')} (Ctrl+D)`}
+            disabled={!canDelete}
+            onClick={() => duplicateSelected()}
+          >
+            {t('tools.duplicate')}
           </button>
           <button
             type="button"

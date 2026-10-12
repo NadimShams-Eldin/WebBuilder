@@ -12,6 +12,9 @@ import {
   getAncestorIds,
   insertAtDrop,
   moveNode,
+  cloneNode,
+  duplicateNode,
+  duplicateNodeInProject,
   removeNode,
   removeNodeInProject,
   resolveInsertTarget,
@@ -152,6 +155,47 @@ describe('drop and move', () => {
     assert.equal(canDrop(root, { targetId: 'a', placement: 'after' }, 'a'), false)
     assert.equal(moveNode(root, 'inner', { targetId: 'b', placement: 'after' }), null)
     assert.equal(canDrop(root, { targetId: 'b', placement: 'inside' }, 'inner'), false)
+  })
+})
+
+describe('clone and duplicate', () => {
+  it('clones a subtree with new ids', () => {
+    const text = createNode('text', 't')
+    text.props = { text: 'نسخة', items: ['أ'] }
+    const flex = createNode('flex', 'f')
+    flex.children = [text]
+    const copy = cloneNode(flex)
+    assert.notEqual(copy.id, 'f')
+    assert.equal(copy.type, 'flex')
+    assert.equal(copy.children.length, 1)
+    assert.notEqual(copy.children[0].id, 't')
+    assert.equal(copy.children[0].props.text, 'نسخة')
+    copy.props.items = ['ب']
+    assert.deepEqual(text.props.items, ['أ'])
+  })
+
+  it('duplicates a node after its sibling and refuses the root', () => {
+    const heading = createNode('heading', 'h')
+    heading.props = { text: 'عنوان' }
+    const root = createNode('container', 'root')
+    root.children = [heading]
+    const result = duplicateNode(root, 'h')
+    assert.ok(result)
+    assert.equal(result.root.children.length, 2)
+    assert.equal(result.root.children[0].id, 'h')
+    assert.equal(result.node.props.text, 'عنوان')
+    assert.notEqual(result.node.id, 'h')
+    assert.equal(duplicateNode(root, 'root'), null)
+  })
+
+  it('duplicates inside a project page', () => {
+    const project = createProject()
+    const added = addNodeToProject(project, null, 'heading')
+    assert.ok(added)
+    const dup = duplicateNodeInProject(added.project, added.node.id)
+    assert.ok(dup)
+    assert.equal(dup.project.pages[0].root.children.length, 2)
+    assert.equal(dup.node.type, 'heading')
   })
 })
 

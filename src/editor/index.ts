@@ -35,9 +35,20 @@ export {
   type ExtractedPropKey,
 } from './extractedContent.ts'
 export {
+  collectEmptyContainerIds,
+  floatingMenuPosition,
+  gridOverlayLines,
+  parsePxTracks,
+  trackLineOffsets,
+  type GuideRect,
+} from './canvasGuides.ts'
+export {
   addNodeToPage,
   addNodeToProject,
   canDrop,
+  cloneNode,
+  duplicateNode,
+  duplicateNodeInProject,
   findNode,
   findParent,
   getAncestorIds,

@@ -1,5 +1,10 @@
 import { useDndContext } from '@dnd-kit/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  collectEmptyContainerIds,
+  floatingMenuPosition,
+  gridOverlayLines,
+} from '../editor/canvasGuides.ts'
 import { registerCanvasIframe } from '../editor/dnd.ts'
 import { indicatorBox, type IndicatorBox } from '../editor/drop.ts'
 import { renderPageHtml } from '../editor/render.ts'
@@ -7,6 +12,8 @@ import { DEVICE_WIDTHS, getActivePage, useEditorStore } from '../editor/store.ts
 import { useI18n } from '../editor/useI18n.ts'
 
 type OverlayRect = { top: number; left: number; width: number; height: number }
+
+type GridLines = { vertical: number[]; horizontal: number[] }
 
 type CanvasMessage = {
   source?: string
@@ -27,6 +34,27 @@ function queryNodeRect(doc: Document, id: string): OverlayRect | null {
   }
 }
 
+function parseGap(value: string): number {
+  const n = Number.parseFloat(value)
+  return Number.isFinite(n) ? n : 0
+}
+
+function queryGridLines(doc: Document, id: string, rect: OverlayRect): GridLines | null {
+  const el = doc.querySelector(`[data-qid="${CSS.escape(id)}"]`)
+  if (!(el instanceof HTMLElement)) return null
+  const style = getComputedStyle(el)
+  if (style.display !== 'grid' && style.display !== 'inline-grid') return null
+  const lines = gridOverlayLines(
+    rect,
+    style.gridTemplateColumns,
+    style.gridTemplateRows,
+    parseGap(style.columnGap),
+    parseGap(style.rowGap),
+  )
+  if (lines.vertical.length === 0 && lines.horizontal.length === 0) return null
+  return lines
+}
+
 export function Canvas() {
   const { t } = useI18n()
   const project = useEditorStore((s) => s.project)
@@ -38,6 +66,8 @@ export function Canvas() {
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
   const setActivePage = useEditorStore((s) => s.setActivePage)
   const setRightTab = useEditorStore((s) => s.setRightTab)
+  const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
+  const deleteSelected = useEditorStore((s) => s.deleteSelected)
   const workspace = useEditorStore((s) => s.workspace)
   const preview = workspace === 'preview'
   const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -45,6 +75,11 @@ export function Canvas() {
   const dragging = Boolean(active)
   const [frameHeight, setFrameHeight] = useState(720)
   const [overlay, setOverlay] = useState<OverlayRect | null>(null)
+  const [hoverRect, setHoverRect] = useState<OverlayRect | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [emptyRects, setEmptyRects] = useState<OverlayRect[]>([])
+  const [gridLines, setGridLines] = useState<GridLines | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
   const [dropBox, setDropBox] = useState<IndicatorBox | null>(null)
 
   const page = getActivePage(project, activePageId)
@@ -52,6 +87,8 @@ export function Canvas() {
     () => (page ? renderPageHtml(project, page.root, preview ? 'preview' : 'editor', page) : ''),
     [project, page, preview],
   )
+  const rtl = project.theme.direction !== 'ltr'
+  const canMutateSelected = Boolean(selectedId && page && selectedId !== page.root.id)
 
   const width = DEVICE_WIDTHS[device]
 
@@ -66,10 +103,42 @@ export function Canvas() {
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedId || preview) {
       setOverlay(null)
+      setGridLines(null)
+      setMenuPos(null)
       return
     }
-    setOverlay(queryNodeRect(doc, selectedId))
-  }, [selectedId, preview])
+    const rect = queryNodeRect(doc, selectedId)
+    setOverlay(rect)
+    setGridLines(rect ? queryGridLines(doc, selectedId, rect) : null)
+    setMenuPos(
+      rect && canMutateSelected ? floatingMenuPosition(rect, width, rtl) : null,
+    )
+  }, [selectedId, preview, canMutateSelected, width, rtl])
+
+  const activeHoverId = preview || dragging ? null : hoveredId
+  const syncHover = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument
+    if (!doc || !activeHoverId || activeHoverId === selectedId) {
+      setHoverRect(null)
+      return
+    }
+    setHoverRect(queryNodeRect(doc, activeHoverId))
+  }, [activeHoverId, selectedId])
+
+  const syncEmpty = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument
+    if (!doc || !page || preview) {
+      setEmptyRects([])
+      return
+    }
+    const rects: OverlayRect[] = []
+    for (const id of collectEmptyContainerIds(page.root)) {
+      if (id === selectedId) continue
+      const rect = queryNodeRect(doc, id)
+      if (rect) rects.push(rect)
+    }
+    setEmptyRects(rects)
+  }, [page, preview, selectedId])
 
   const syncDrop = useCallback(() => {
     const doc = iframeRef.current?.contentDocument
@@ -99,16 +168,26 @@ export function Canvas() {
     const onLoad = () => {
       syncHeight()
       syncOverlay()
+      syncHover()
+      syncEmpty()
       syncDrop()
     }
     iframe.addEventListener('load', onLoad)
     onLoad()
     return () => iframe.removeEventListener('load', onLoad)
-  }, [srcDoc, syncHeight, syncOverlay, syncDrop])
+  }, [srcDoc, syncHeight, syncOverlay, syncHover, syncEmpty, syncDrop])
 
   useEffect(() => {
     syncOverlay()
   }, [syncOverlay, zoom, device])
+
+  useEffect(() => {
+    syncHover()
+  }, [syncHover, zoom, device])
+
+  useEffect(() => {
+    syncEmpty()
+  }, [syncEmpty, zoom, device])
 
   useEffect(() => {
     syncDrop()
@@ -121,13 +200,20 @@ export function Canvas() {
         setActivePage(event.data.pageId)
         return
       }
-      if (preview || event.data.type !== 'select') return
+      if (preview) return
+      if (event.data.type === 'hover') {
+        setHoveredId(event.data.id ?? null)
+        return
+      }
+      if (event.data.type !== 'select') return
       setSelectedId(event.data.id ?? null)
       if (event.data.id) setRightTab('outline')
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
   }, [preview, setSelectedId, setRightTab, setActivePage])
+
+  const showGuides = !preview && !dropBox
 
   return (
     <div
@@ -154,9 +240,37 @@ export function Canvas() {
           data-overlay="selection"
           aria-hidden="true"
         >
-          {overlay && !dropBox ? (
+          {showGuides
+            ? emptyRects.map((rect, index) => (
+                <div
+                  key={`empty-${index}`}
+                  className="absolute border border-dashed border-neutral-400/80"
+                  data-guide="empty"
+                  style={{
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height,
+                  }}
+                />
+              ))
+            : null}
+          {showGuides && hoverRect ? (
+            <div
+              className="absolute border-2 border-emerald-500 bg-emerald-500/5"
+              data-guide="hover"
+              style={{
+                top: hoverRect.top,
+                left: hoverRect.left,
+                width: hoverRect.width,
+                height: hoverRect.height,
+              }}
+            />
+          ) : null}
+          {showGuides && overlay ? (
             <div
               className="absolute border-2 border-blue-500 bg-blue-500/5"
+              data-guide="selected"
               style={{
                 top: overlay.top,
                 left: overlay.left,
@@ -164,6 +278,48 @@ export function Canvas() {
                 height: overlay.height,
               }}
             />
+          ) : null}
+          {showGuides && overlay && gridLines
+            ? gridLines.vertical.map((left, index) => (
+                <div
+                  key={`gv-${index}`}
+                  className="absolute w-px bg-sky-400/80"
+                  data-guide="grid-col"
+                  style={{ top: overlay.top, left, height: overlay.height }}
+                />
+              ))
+            : null}
+          {showGuides && overlay && gridLines
+            ? gridLines.horizontal.map((top, index) => (
+                <div
+                  key={`gh-${index}`}
+                  className="absolute h-px bg-sky-400/80"
+                  data-guide="grid-row"
+                  style={{ top, left: overlay.left, width: overlay.width }}
+                />
+              ))
+            : null}
+          {showGuides && menuPos && canMutateSelected ? (
+            <div
+              className="pointer-events-auto absolute z-10 flex overflow-hidden rounded-md border border-neutral-200 bg-white text-xs shadow-sm dark:border-neutral-700 dark:bg-neutral-900"
+              data-guide="menu"
+              style={{ top: menuPos.top, left: menuPos.left }}
+            >
+              <button
+                type="button"
+                className="px-2 py-1 text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                onClick={() => duplicateSelected()}
+              >
+                {t('guide.duplicate')}
+              </button>
+              <button
+                type="button"
+                className="px-2 py-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                onClick={() => deleteSelected()}
+              >
+                {t('guide.delete')}
+              </button>
+            </div>
           ) : null}
           {dropBox ? (
             <div

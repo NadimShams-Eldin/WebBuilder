@@ -34,6 +34,7 @@ import {
   clearPageInProject,
   insertAtDropInProject,
   moveNodeInProject,
+  duplicateNodeInProject,
   removeNodeInProject,
   updateNodeInProject,
   type DropIntent,
@@ -83,6 +84,7 @@ export type EditorState = {
   moveNodeTo: (nodeId: string, intent: DropIntent) => boolean
   updateSelected: (patch: NodePatch) => void
   updateNodeById: (id: string, patch: NodePatch) => void
+  duplicateSelected: () => boolean
   deleteSelected: () => boolean
   clearPage: () => boolean
   addPage: (name?: string) => boolean
@@ -244,6 +246,19 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const { project, activePageId } = get()
       const next = updateNodeInProject(project, id, patch, activePageId)
       if (next) commit({ project: next, selectedId: id }, id)
+    },
+    duplicateSelected: () => {
+      const { project, selectedId, activePageId } = get()
+      if (!selectedId) return false
+      const result = duplicateNodeInProject(project, selectedId, activePageId)
+      if (!result) return false
+      commit({
+        project: result.project,
+        selectedId: result.node.id,
+        lastInsertError: null,
+        dropPreview: null,
+      })
+      return true
     },
     deleteSelected: () => {
       const { project, selectedId, activePageId, locale } = get()

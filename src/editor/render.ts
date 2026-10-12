@@ -188,6 +188,20 @@ const EDITOR_SCRIPT = `<script>
     var id = el ? el.getAttribute('data-qid') : null;
     window.parent.postMessage({ source: 'qitma-canvas', type: 'select', id: id }, '*');
   }, true);
+  var lastHover;
+  document.addEventListener('mousemove', function (event) {
+    var target = event.target;
+    var el = target && target.closest ? target.closest('[data-qid]') : null;
+    var id = el ? el.getAttribute('data-qid') : null;
+    if (id === lastHover) return;
+    lastHover = id;
+    window.parent.postMessage({ source: 'qitma-canvas', type: 'hover', id: id }, '*');
+  }, true);
+  document.addEventListener('mouseleave', function () {
+    if (lastHover == null) return;
+    lastHover = null;
+    window.parent.postMessage({ source: 'qitma-canvas', type: 'hover', id: null }, '*');
+  }, true);
   document.addEventListener('submit', function (event) { event.preventDefault(); }, true);
 })();
 </script>`

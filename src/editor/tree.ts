@@ -1,4 +1,4 @@
-import { createNode, isContainerType } from './createNode.ts'
+import { createId, createNode, isContainerType } from './createNode.ts'
 import { resolvePage } from './pages.ts'
 import type { Node, NodeAnimation, NodeProps, NodeStyle, NodeType, Page, Project } from './types.ts'
 
@@ -218,6 +218,44 @@ export function insertAtDrop(root: Node, child: Node, intent: DropIntent): Node 
   const target = resolveDropInsert(root, intent)
   if (!target) return null
   return insertChild(root, target.parentId, child, target.index)
+}
+
+export function cloneNode(node: Node): Node {
+  const props: NodeProps = { ...node.props }
+  if (Array.isArray(node.props.items)) props.items = [...node.props.items]
+  if (Array.isArray(node.props.options)) props.options = [...node.props.options]
+  return {
+    ...node,
+    id: createId(),
+    props,
+    style: { ...node.style },
+    animation: node.animation ? { ...node.animation } : null,
+    children: node.children.map(cloneNode),
+  }
+}
+
+export function duplicateNode(root: Node, id: string): { root: Node; node: Node } | null {
+  if (root.id === id) return null
+  const parent = findParent(root, id)
+  const source = findNode(root, id)
+  if (!parent || !source) return null
+  const copy = cloneNode(source)
+  const index = parent.children.findIndex((child) => child.id === id)
+  const next = insertChild(root, parent.id, copy, index + 1)
+  if (!next) return null
+  return { root: next, node: copy }
+}
+
+export function duplicateNodeInProject(
+  project: Project,
+  nodeId: string,
+  pageId?: string | null,
+): { project: Project; node: Node } | null {
+  const page = resolvePage(project, pageId)
+  if (!page) return null
+  const result = duplicateNode(page.root, nodeId)
+  if (!result) return null
+  return { project: patchActivePage(project, result.root, page.id), node: result.node }
 }
 
 export function removeNode(root: Node, id: string): { root: Node; node: Node } | null {
