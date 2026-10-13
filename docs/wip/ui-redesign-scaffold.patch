@@ -1,0 +1,1132 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index fb51b4d..3176f7a 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,9 +1,12 @@
+ import { useEffect } from 'react'
+-import { AppHeader } from './components/AppHeader'
+ import { CanvasArea } from './components/CanvasArea'
+ import { EditorDnd } from './components/EditorDnd'
+ import { LeftPanel } from './components/LeftPanel'
++import { MenuBar } from './components/MenuBar'
++import { PageTabs } from './components/PageTabs'
+ import { RightPanel } from './components/RightPanel'
++import { StatusBar } from './components/StatusBar'
++import { Toolbar } from './components/Toolbar'
+ import { localeDir } from './editor/chromePrefs.ts'
+ import { useEditorStore } from './editor/store.ts'
+ 
+@@ -11,6 +14,7 @@ export default function App() {
+   const theme = useEditorStore((s) => s.theme)
+   const locale = useEditorStore((s) => s.locale)
+   const workspace = useEditorStore((s) => s.workspace)
++  const panels = useEditorStore((s) => s.panels)
+   const preview = workspace === 'preview'
+   const dir = localeDir(locale)
+ 
+@@ -27,12 +31,17 @@ export default function App() {
+         dir={dir}
+         className="flex h-screen flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
+       >
+-        <AppHeader />
++        <MenuBar />
++        {preview ? null : <Toolbar />}
+         <div className="flex min-h-0 flex-1">
+-          {preview ? null : <RightPanel />}
+-          <CanvasArea />
+-          {preview ? null : <LeftPanel />}
++          {!preview && panels.right ? <RightPanel /> : null}
++          <div className="flex min-h-0 flex-1 flex-col">
++            <PageTabs />
++            <CanvasArea />
++          </div>
++          {!preview && panels.left ? <LeftPanel /> : null}
+         </div>
++        {preview ? null : <StatusBar />}
+       </div>
+     </EditorDnd>
+   )
+diff --git a/src/components/CanvasArea.tsx b/src/components/CanvasArea.tsx
+index bba5e00..84f7e97 100644
+--- a/src/components/CanvasArea.tsx
++++ b/src/components/CanvasArea.tsx
+@@ -1,80 +1,13 @@
+ import { useDroppable } from '@dnd-kit/core'
+ import { CANVAS_DROPPABLE_ID } from '../editor/dnd.ts'
+-import { useEditorStore } from '../editor/store.ts'
+-import { useI18n } from '../editor/useI18n.ts'
+-import { DEVICE_WIDTHS, DEVICES, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '../editor/viewport.ts'
+ import { Canvas } from './Canvas'
+ 
+ export function CanvasArea() {
+-  const { t } = useI18n()
+-  const device = useEditorStore((s) => s.device)
+-  const zoom = useEditorStore((s) => s.zoom)
+-  const setDevice = useEditorStore((s) => s.setDevice)
+-  const setZoom = useEditorStore((s) => s.setZoom)
+   const { setNodeRef } = useDroppable({ id: CANVAS_DROPPABLE_ID })
+-  const atMin = zoom <= ZOOM_MIN
+-  const atMax = zoom >= ZOOM_MAX
+ 
+   return (
+-    <main className="flex h-full flex-1 flex-col bg-neutral-100 dark:bg-neutral-950">
+-      <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-2 dark:border-neutral-800 dark:bg-neutral-900">
+-        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+-          {DEVICES.map((id) => (
+-            <button
+-              key={id}
+-              type="button"
+-              onClick={() => setDevice(id)}
+-              aria-pressed={device === id}
+-              className={
+-                device === id
+-                  ? 'rounded border border-neutral-200 bg-neutral-100 px-2 py-1 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
+-                  : 'rounded px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+-              }
+-            >
+-              {t(`device.${id}`)}
+-            </button>
+-          ))}
+-          <span className="text-neutral-400">{DEVICE_WIDTHS[device]}px</span>
+-        </div>
+-        <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+-          <button
+-            type="button"
+-            className={
+-              atMin
+-                ? 'rounded border border-neutral-200 px-2 py-1 text-neutral-300 dark:border-neutral-700 dark:text-neutral-600'
+-                : 'rounded border border-neutral-200 px-2 py-1 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800'
+-            }
+-            disabled={atMin}
+-            aria-label={t('zoom.out')}
+-            onClick={() => setZoom(zoom - ZOOM_STEP)}
+-          >
+-            −
+-          </button>
+-          <button
+-            type="button"
+-            className="min-w-12 rounded px-1 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+-            title={t('zoom.reset')}
+-            onClick={() => setZoom(1)}
+-          >
+-            {Math.round(zoom * 100)}%
+-          </button>
+-          <button
+-            type="button"
+-            className={
+-              atMax
+-                ? 'rounded border border-neutral-200 px-2 py-1 text-neutral-300 dark:border-neutral-700 dark:text-neutral-600'
+-                : 'rounded border border-neutral-200 px-2 py-1 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800'
+-            }
+-            disabled={atMax}
+-            aria-label={t('zoom.in')}
+-            onClick={() => setZoom(zoom + ZOOM_STEP)}
+-          >
+-            +
+-          </button>
+-        </div>
+-      </div>
+-
+-      <div ref={setNodeRef} className="flex flex-1 justify-center overflow-auto p-8">
++    <main className="flex min-h-0 flex-1 justify-center overflow-auto bg-neutral-100 p-8 dark:bg-neutral-950">
++      <div ref={setNodeRef} className="flex w-full justify-center">
+         <Canvas />
+       </div>
+     </main>
+diff --git a/src/components/MenuBar.tsx b/src/components/MenuBar.tsx
+new file mode 100644
+index 0000000..f319889
+--- /dev/null
++++ b/src/components/MenuBar.tsx
+@@ -0,0 +1,247 @@
++import { useEffect, useRef, useState } from 'react'
++import { createProject } from '../editor/createProject.ts'
++import { selectCanRedo, selectCanUndo, useEditorStore } from '../editor/store.ts'
++import { useI18n } from '../editor/useI18n.ts'
++import { useProjectIO } from './useProjectIO.ts'
++
++type MenuItem =
++  | { kind: 'action'; label: string; onSelect: () => void; disabled?: boolean; checked?: boolean }
++  | { kind: 'separator' }
++
++type MenuDef = { id: string; label: string; items: MenuItem[] }
++
++function Logo() {
++  return (
++    <span className="flex h-6 w-6 items-center justify-center rounded bg-neutral-900 text-[11px] font-bold text-white dark:bg-neutral-100 dark:text-neutral-900">
++      ق
++    </span>
++  )
++}
++
++export function MenuBar() {
++  const { t } = useI18n()
++  const [open, setOpen] = useState<string | null>(null)
++  const [aboutOpen, setAboutOpen] = useState(false)
++  const barRef = useRef<HTMLDivElement>(null)
++
++  const undo = useEditorStore((s) => s.undo)
++  const redo = useEditorStore((s) => s.redo)
++  const canUndo = useEditorStore(selectCanUndo)
++  const canRedo = useEditorStore(selectCanRedo)
++  const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
++  const deleteSelected = useEditorStore((s) => s.deleteSelected)
++  const clearPage = useEditorStore((s) => s.clearPage)
++  const loadDemo = useEditorStore((s) => s.loadDemo)
++  const project = useEditorStore((s) => s.project)
++  const setProject = useEditorStore((s) => s.setProject)
++  const selectedId = useEditorStore((s) => s.selectedId)
++  const addPage = useEditorStore((s) => s.addPage)
++  const removePage = useEditorStore((s) => s.removePage)
++  const setActivePage = useEditorStore((s) => s.setActivePage)
++  const activePageId = useEditorStore((s) => s.activePageId)
++  const theme = useEditorStore((s) => s.theme)
++  const setTheme = useEditorStore((s) => s.setTheme)
++  const panels = useEditorStore((s) => s.panels)
++  const togglePanel = useEditorStore((s) => s.togglePanel)
++  const gridOverlay = useEditorStore((s) => s.gridOverlay)
++  const toggleGridOverlay = useEditorStore((s) => s.toggleGridOverlay)
++  const resetLayout = useEditorStore((s) => s.resetLayout)
++  const workspace = useEditorStore((s) => s.workspace)
++  const setWorkspace = useEditorStore((s) => s.setWorkspace)
++  const io = useProjectIO()
++
++  const preview = workspace === 'preview'
++  const activePage = project.pages.find((page) => page.id === activePageId)
++  const canDelete = Boolean(selectedId && activePage && selectedId !== activePage.root.id)
++  const canClear = Boolean(activePage && activePage.root.children.length > 0)
++
++  useEffect(() => {
++    if (!open) return
++    const onDown = (event: MouseEvent) => {
++      if (!barRef.current?.contains(event.target as Node)) setOpen(null)
++    }
++    const onKey = (event: KeyboardEvent) => {
++      if (event.key === 'Escape') setOpen(null)
++    }
++    document.addEventListener('mousedown', onDown)
++    document.addEventListener('keydown', onKey)
++    return () => {
++      document.removeEventListener('mousedown', onDown)
++      document.removeEventListener('keydown', onKey)
++    }
++  }, [open])
++
++  const menus: MenuDef[] = [
++    {
++      id: 'file',
++      label: t('menu.file'),
++      items: [
++        { kind: 'action', label: t('menu.new'), onSelect: () => setProject(createProject()) },
++        { kind: 'action', label: t('tools.demo'), onSelect: loadDemo },
++        { kind: 'separator' },
++        { kind: 'action', label: t('project.import'), onSelect: io.importProject },
++        { kind: 'action', label: t('project.export'), onSelect: io.exportProject },
++        { kind: 'action', label: t('project.exportSite'), onSelect: () => void io.exportSite() },
++      ],
++    },
++    {
++      id: 'edit',
++      label: t('menu.edit'),
++      items: [
++        { kind: 'action', label: t('header.undo'), onSelect: undo, disabled: !canUndo },
++        { kind: 'action', label: t('header.redo'), onSelect: redo, disabled: !canRedo },
++        { kind: 'separator' },
++        { kind: 'action', label: t('tools.duplicate'), onSelect: () => duplicateSelected(), disabled: !canDelete },
++        { kind: 'action', label: t('tools.delete'), onSelect: () => deleteSelected(), disabled: !canDelete },
++        { kind: 'action', label: t('tools.clear'), onSelect: () => clearPage(), disabled: !canClear },
++      ],
++    },
++    {
++      id: 'pages',
++      label: t('menu.pages'),
++      items: [
++        { kind: 'action', label: t('pages.add'), onSelect: () => addPage() },
++        { kind: 'separator' },
++        ...project.pages.map<MenuItem>((page) => ({
++          kind: 'action',
++          label: page.name,
++          onSelect: () => setActivePage(page.id),
++          checked: page.id === activePageId,
++        })),
++        ...(project.pages.length > 1
++          ? ([
++              { kind: 'separator' },
++              {
++                kind: 'action',
++                label: t('pages.delete'),
++                onSelect: () => removePage(activePageId ?? undefined),
++              },
++            ] as MenuItem[])
++          : []),
++      ],
++    },
++    {
++      id: 'view',
++      label: t('menu.view'),
++      items: [
++        { kind: 'action', label: t('menu.preview'), onSelect: () => setWorkspace('preview'), checked: preview },
++        { kind: 'action', label: t('menu.compose'), onSelect: () => setWorkspace('compose'), checked: !preview },
++        { kind: 'separator' },
++        { kind: 'action', label: t('menu.gridOverlay'), onSelect: toggleGridOverlay, checked: gridOverlay },
++      ],
++    },
++    {
++      id: 'window',
++      label: t('menu.window'),
++      items: [
++        { kind: 'action', label: t('menu.panelLeft'), onSelect: () => togglePanel('left'), checked: panels.left },
++        { kind: 'action', label: t('menu.panelRight'), onSelect: () => togglePanel('right'), checked: panels.right },
++        { kind: 'separator' },
++        {
++          kind: 'action',
++          label: t('menu.toggleTheme'),
++          onSelect: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
++        },
++        { kind: 'action', label: t('menu.resetLayout'), onSelect: resetLayout },
++      ],
++    },
++    {
++      id: 'help',
++      label: t('menu.help'),
++      items: [{ kind: 'action', label: t('menu.about'), onSelect: () => setAboutOpen(true) }],
++    },
++  ]
++
++  return (
++    <div
++      ref={barRef}
++      className="relative z-30 flex items-center gap-1 border-b border-neutral-200 bg-white px-2 py-1 dark:border-neutral-800 dark:bg-neutral-900"
++    >
++      <Logo />
++      <span className="me-2 text-xs font-semibold text-neutral-700 dark:text-neutral-200">
++        {t('app.name')}
++      </span>
++
++      {menus.map((menu) => (
++        <div key={menu.id} className="relative">
++          <button
++            type="button"
++            className={
++              open === menu.id
++                ? 'rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
++                : 'rounded px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
++            }
++            onClick={() => setOpen(open === menu.id ? null : menu.id)}
++            onMouseEnter={() => (open ? setOpen(menu.id) : undefined)}
++          >
++            {menu.label}
++          </button>
++          {open === menu.id ? (
++            <div className="absolute start-0 mt-1 min-w-52 rounded-md border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
++              {menu.items.map((item, index) =>
++                item.kind === 'separator' ? (
++                  <div key={`sep-${index}`} className="my-1 h-px bg-neutral-100 dark:bg-neutral-800" />
++                ) : (
++                  <button
++                    key={`${menu.id}-${index}`}
++                    type="button"
++                    disabled={item.disabled}
++                    className={
++                      item.disabled
++                        ? 'flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs text-neutral-300 dark:text-neutral-600'
++                        : 'flex w-full items-center gap-2 px-3 py-1.5 text-start text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800'
++                    }
++                    onClick={() => {
++                      setOpen(null)
++                      item.onSelect()
++                    }}
++                  >
++                    <span className="w-3 text-blue-600 dark:text-blue-400">{item.checked ? '•' : ''}</span>
++                    <span className="flex-1 truncate">{item.label}</span>
++                  </button>
++                ),
++              )}
++            </div>
++          ) : null}
++        </div>
++      ))}
++
++      <div className="ms-auto flex items-center gap-2">
++        <button
++          type="button"
++          className="rounded px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
++          onClick={() => setWorkspace(preview ? 'compose' : 'preview')}
++        >
++          {preview ? t('menu.compose') : t('menu.preview')}
++        </button>
++        <button
++          type="button"
++          className="rounded border border-blue-600 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
++          onClick={() => void io.exportSite()}
++        >
++          {t('header.publish')}
++        </button>
++      </div>
++
++      {aboutOpen ? (
++        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
++          <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl dark:bg-neutral-900">
++            <h2 className="mb-2 text-sm font-semibold text-neutral-800 dark:text-neutral-100">
++              {t('menu.about')}
++            </h2>
++            <p className="mb-3 text-xs leading-relaxed text-neutral-600 dark:text-neutral-300">
++              {t('menu.aboutText')}
++            </p>
++            <button
++              type="button"
++              className="w-full rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-neutral-100 dark:text-neutral-900"
++              onClick={() => setAboutOpen(false)}
++            >
++              {t('about.close')}
++            </button>
++          </div>
++        </div>
++      ) : null}
++    </div>
++  )
++}
+diff --git a/src/components/PageTabs.tsx b/src/components/PageTabs.tsx
+new file mode 100644
+index 0000000..1981a00
+--- /dev/null
++++ b/src/components/PageTabs.tsx
+@@ -0,0 +1,83 @@
++import { useState } from 'react'
++import { useEditorStore } from '../editor/store.ts'
++import { useI18n } from '../editor/useI18n.ts'
++
++export function PageTabs() {
++  const { t } = useI18n()
++  const pages = useEditorStore((s) => s.project.pages)
++  const activePageId = useEditorStore((s) => s.activePageId)
++  const setActivePage = useEditorStore((s) => s.setActivePage)
++  const addPage = useEditorStore((s) => s.addPage)
++  const removePage = useEditorStore((s) => s.removePage)
++  const renamePage = useEditorStore((s) => s.renamePage)
++  const [editing, setEditing] = useState<string | null>(null)
++  const [draft, setDraft] = useState('')
++
++  const commit = (pageId: string) => {
++    if (draft.trim()) renamePage(pageId, draft)
++    setEditing(null)
++  }
++
++  return (
++    <div className="flex items-stretch gap-1 border-b border-neutral-200 bg-neutral-50 px-2 pt-1 dark:border-neutral-800 dark:bg-neutral-950">
++      {pages.map((page) => {
++        const active = page.id === activePageId
++        const isEditing = editing === page.id
++        return (
++          <div
++            key={page.id}
++            className={
++              active
++                ? 'flex items-center gap-2 rounded-t-md border border-b-0 border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100'
++                : 'flex items-center gap-2 rounded-t-md px-3 py-1.5 text-xs text-neutral-500 hover:bg-white dark:text-neutral-400 dark:hover:bg-neutral-900'
++            }
++          >
++            {isEditing ? (
++              <input
++                autoFocus
++                className="w-24 bg-transparent text-xs text-neutral-800 outline-none dark:text-neutral-100"
++                value={draft}
++                onChange={(event) => setDraft(event.target.value)}
++                onBlur={() => commit(page.id)}
++                onKeyDown={(event) => {
++                  if (event.key === 'Enter') commit(page.id)
++                  if (event.key === 'Escape') setEditing(null)
++                }}
++              />
++            ) : (
++              <button
++                type="button"
++                onClick={() => setActivePage(page.id)}
++                onDoubleClick={() => {
++                  setDraft(page.name)
++                  setEditing(page.id)
++                }}
++                title={page.slug}
++              >
++                {page.name}
++              </button>
++            )}
++            {active && pages.length > 1 ? (
++              <button
++                type="button"
++                className="text-neutral-400 hover:text-red-600"
++                title={t('pages.delete')}
++                onClick={() => removePage(page.id)}
++              >
++                ×
++              </button>
++            ) : null}
++          </div>
++        )
++      })}
++      <button
++        type="button"
++        className="mb-1 rounded-md px-2 text-sm text-neutral-500 hover:bg-white dark:text-neutral-400 dark:hover:bg-neutral-900"
++        title={t('pages.add')}
++        onClick={() => addPage()}
++      >
++        +
++      </button>
++    </div>
++  )
++}
+diff --git a/src/components/StatusBar.tsx b/src/components/StatusBar.tsx
+new file mode 100644
+index 0000000..4be51d9
+--- /dev/null
++++ b/src/components/StatusBar.tsx
+@@ -0,0 +1,35 @@
++import { selectActivePage, useEditorStore } from '../editor/store.ts'
++import { findNode } from '../editor/tree.ts'
++import { useI18n } from '../editor/useI18n.ts'
++import { DEVICE_WIDTHS } from '../editor/viewport.ts'
++
++export function StatusBar() {
++  const { t } = useI18n()
++  const selectedId = useEditorStore((s) => s.selectedId)
++  const device = useEditorStore((s) => s.device)
++  const zoom = useEditorStore((s) => s.zoom)
++  const workspace = useEditorStore((s) => s.workspace)
++  const page = useEditorStore(selectActivePage)
++  const node = page && selectedId ? findNode(page.root, selectedId) : null
++
++  return (
++    <div className="flex items-center gap-3 border-t border-neutral-200 bg-white px-3 py-1 text-[11px] text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
++      <span className="font-medium text-neutral-600 dark:text-neutral-300">{t('status.ready')}</span>
++      <span className="text-neutral-300 dark:text-neutral-600">|</span>
++      <span className="truncate">
++        {t('status.selected')}: {node ? `${node.name} · ${t(`block.${node.type}`)}` : t('status.noSelection')}
++      </span>
++      <div className="ms-auto flex items-center gap-3">
++        <span>
++          {t('status.page')}: {page?.name ?? '—'}
++        </span>
++        <span>
++          {t('status.device')}: {workspace === 'preview' ? '—' : `${t(`device.${device}`)} ${DEVICE_WIDTHS[device]}px`}
++        </span>
++        <span>
++          {t('status.zoom')}: {workspace === 'preview' ? '—' : `${Math.round(zoom * 100)}%`}
++        </span>
++      </div>
++    </div>
++  )
++}
+diff --git a/src/components/Toolbar.tsx b/src/components/Toolbar.tsx
+new file mode 100644
+index 0000000..d99484f
+--- /dev/null
++++ b/src/components/Toolbar.tsx
+@@ -0,0 +1,152 @@
++import type { ReactNode } from 'react'
++import { selectCanRedo, selectCanUndo, useEditorStore } from '../editor/store.ts'
++import { useI18n } from '../editor/useI18n.ts'
++import { DEVICE_WIDTHS, DEVICES, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '../editor/viewport.ts'
++
++function Icon({ children }: { children: ReactNode }) {
++  return (
++    <svg
++      viewBox="0 0 24 24"
++      fill="none"
++      stroke="currentColor"
++      strokeWidth="1.8"
++      strokeLinecap="round"
++      strokeLinejoin="round"
++      className="h-4 w-4"
++      aria-hidden="true"
++    >
++      {children}
++    </svg>
++  )
++}
++
++const undoIcon = <Icon><path d="M9 14 4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-4" /></Icon>
++const redoIcon = <Icon><path d="m15 14 5-5-5-5" /><path d="M20 9H9a5 5 0 0 0 0 10h4" /></Icon>
++const duplicateIcon = <Icon><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M15 5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2" /></Icon>
++const deleteIcon = <Icon><path d="M4 7h16" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /></Icon>
++const clearIcon = <Icon><path d="M4 20h16" /><path d="m7 16 9-9a2 2 0 0 1 3 3l-9 9H7z" /></Icon>
++const gridIcon = <Icon><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M4 10h16M4 15h16M10 4v16M15 4v16" /></Icon>
++const panelLeftIcon = <Icon><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></Icon>
++const panelRightIcon = <Icon><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></Icon>
++const previewIcon = <Icon><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></Icon>
++const minusIcon = <Icon><path d="M5 12h14" /></Icon>
++const plusIcon = <Icon><path d="M12 5v14M5 12h14" /></Icon>
++const leftIcon = <Icon><path d="m15 18-6-6 6-6" /></Icon>
++const rightIcon = <Icon><path d="m9 18 6-6-6-6" /></Icon>
++
++function ToolButton({
++  title,
++  onClick,
++  disabled,
++  active,
++  children,
++}: {
++  title: string
++  onClick: () => void
++  disabled?: boolean
++  active?: boolean
++  children: ReactNode
++}) {
++  const base = 'flex h-7 items-center justify-center rounded-md px-1.5 text-sm'
++  const tone = disabled
++    ? 'text-neutral-300 dark:text-neutral-600'
++    : active
++      ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
++      : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
++  return (
++    <button type="button" title={title} disabled={disabled} onClick={onClick} className={`${base} ${tone}`}>
++      {children}
++    </button>
++  )
++}
++
++function Divider() {
++  return <span className="mx-1 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
++}
++
++export function Toolbar() {
++  const { t } = useI18n()
++  const undo = useEditorStore((s) => s.undo)
++  const redo = useEditorStore((s) => s.redo)
++  const canUndo = useEditorStore(selectCanUndo)
++  const canRedo = useEditorStore(selectCanRedo)
++  const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
++  const deleteSelected = useEditorStore((s) => s.deleteSelected)
++  const clearPage = useEditorStore((s) => s.clearPage)
++  const selectedId = useEditorStore((s) => s.selectedId)
++  const page = useEditorStore((s) => s.project.pages.find((p) => p.id === s.activePageId))
++  const device = useEditorStore((s) => s.device)
++  const setDevice = useEditorStore((s) => s.setDevice)
++  const zoom = useEditorStore((s) => s.zoom)
++  const setZoom = useEditorStore((s) => s.setZoom)
++  const panels = useEditorStore((s) => s.panels)
++  const togglePanel = useEditorStore((s) => s.togglePanel)
++  const gridOverlay = useEditorStore((s) => s.gridOverlay)
++  const toggleGridOverlay = useEditorStore((s) => s.toggleGridOverlay)
++  const workspace = useEditorStore((s) => s.workspace)
++  const setWorkspace = useEditorStore((s) => s.setWorkspace)
++  const preview = workspace === 'preview'
++
++  const canDelete = Boolean(selectedId && page && selectedId !== page.root.id)
++  const canClear = Boolean(page && page.root.children.length > 0)
++  const deviceIndex = DEVICES.indexOf(device)
++  const prevDevice = DEVICES[Math.max(0, deviceIndex - 1)]
++  const nextDevice = DEVICES[Math.min(DEVICES.length - 1, deviceIndex + 1)]
++
++  return (
++    <div className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-white px-2 py-1 dark:border-neutral-800 dark:bg-neutral-900">
++      <ToolButton title={t('header.undo')} onClick={undo} disabled={!canUndo}>{undoIcon}</ToolButton>
++      <ToolButton title={t('header.redo')} onClick={redo} disabled={!canRedo}>{redoIcon}</ToolButton>
++      <Divider />
++      <ToolButton title={t('tools.duplicate')} onClick={() => duplicateSelected()} disabled={!canDelete}>
++        {duplicateIcon}
++      </ToolButton>
++      <ToolButton title={t('tools.delete')} onClick={() => deleteSelected()} disabled={!canDelete}>
++        {deleteIcon}
++      </ToolButton>
++      <ToolButton title={t('tools.clear')} onClick={() => clearPage()} disabled={!canClear}>
++        {clearIcon}
++      </ToolButton>
++      <Divider />
++      <ToolButton title={t(prevDevice === device ? `device.${device}` : `device.${prevDevice}`)} onClick={() => setDevice(prevDevice)} disabled={deviceIndex === 0}>
++        {leftIcon}
++      </ToolButton>
++      <span className="min-w-16 text-center text-xs text-neutral-500 dark:text-neutral-400">
++        {t(`device.${device}`)} · {DEVICE_WIDTHS[device]}px
++      </span>
++      <ToolButton title={t(nextDevice === device ? `device.${device}` : `device.${nextDevice}`)} onClick={() => setDevice(nextDevice)} disabled={deviceIndex === DEVICES.length - 1}>
++        {rightIcon}
++      </ToolButton>
++      <Divider />
++      <ToolButton title={t('zoom.out')} onClick={() => setZoom(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN}>
++        {minusIcon}
++      </ToolButton>
++      <button
++        type="button"
++        title={t('zoom.reset')}
++        onClick={() => setZoom(1)}
++        className="min-w-10 rounded px-1 text-xs text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
++      >
++        {Math.round(zoom * 100)}%
++      </button>
++      <ToolButton title={t('zoom.in')} onClick={() => setZoom(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX}>
++        {plusIcon}
++      </ToolButton>
++      <Divider />
++      <ToolButton title={t('menu.gridOverlay')} onClick={toggleGridOverlay} active={gridOverlay}>
++        {gridIcon}
++      </ToolButton>
++      <ToolButton title={panels.left ? t('layout.hideLeft') : t('layout.showLeft')} onClick={() => togglePanel('left')} active={panels.left}>
++        {panelLeftIcon}
++      </ToolButton>
++      <ToolButton title={panels.right ? t('layout.hideRight') : t('layout.showRight')} onClick={() => togglePanel('right')} active={panels.right}>
++        {panelRightIcon}
++      </ToolButton>
++      <div className="ms-auto">
++        <ToolButton title={preview ? t('menu.compose') : t('menu.preview')} onClick={() => setWorkspace(preview ? 'compose' : 'preview')} active={preview}>
++          {previewIcon}
++        </ToolButton>
++      </div>
++    </div>
++  )
++}
+diff --git a/src/components/useProjectIO.ts b/src/components/useProjectIO.ts
+new file mode 100644
+index 0000000..acc6d66
+--- /dev/null
++++ b/src/components/useProjectIO.ts
+@@ -0,0 +1,39 @@
++import { useMemo } from 'react'
++import { projectFileName } from '../editor/projectJson.ts'
++import { useEditorStore } from '../editor/store.ts'
++
++function downloadJson(name: string, content: string) {
++  const blob = new Blob([content], { type: 'application/json' })
++  const url = URL.createObjectURL(blob)
++  const link = document.createElement('a')
++  link.href = url
++  link.download = name
++  link.click()
++  URL.revokeObjectURL(url)
++}
++
++export function useProjectIO() {
++  const project = useEditorStore((s) => s.project)
++  const exportProjectJson = useEditorStore((s) => s.exportProjectJson)
++  const exportSiteZip = useEditorStore((s) => s.exportSiteZip)
++  const importProjectJson = useEditorStore((s) => s.importProjectJson)
++
++  return useMemo(
++    () => ({
++      importProject: () => {
++        const input = document.createElement('input')
++        input.type = 'file'
++        input.accept = 'application/json,.json'
++        input.addEventListener('change', () => {
++          const file = input.files?.[0]
++          if (!file) return
++          void file.text().then((raw) => importProjectJson(raw))
++        })
++        input.click()
++      },
++      exportProject: () => downloadJson(projectFileName(project), exportProjectJson()),
++      exportSite: async () => exportSiteZip(),
++    }),
++    [project, exportProjectJson, exportSiteZip, importProjectJson],
++  )
++}
+diff --git a/src/editor/i18n.ts b/src/editor/i18n.ts
+index 427bfde..9789541 100644
+--- a/src/editor/i18n.ts
++++ b/src/editor/i18n.ts
+@@ -159,6 +159,36 @@ const ar: Record<string, string> = {
+   'style.border': 'الحد',
+   'style.borderRadius': 'الاستدارة',
+   'style.boxShadow': 'الظل',
++  'menu.file': 'ملف',
++  'menu.edit': 'تحرير',
++  'menu.pages': 'الصفحات',
++  'menu.view': 'عرض',
++  'menu.window': 'نافذة',
++  'menu.help': 'مساعدة',
++  'menu.new': 'مشروع جديد',
++  'menu.about': 'حول البرنامج',
++  'menu.aboutText': 'قطمة — محرّر مواقع مبني على صناديق البناء الأولية (Lego) وتصدير HTML/CSS نظيف.',
++  'menu.gridOverlay': 'شبكة الأدلة',
++  'menu.panelLeft': 'لوحة الخصائص',
++  'menu.panelRight': 'لوحة القطع',
++  'menu.resetLayout': 'استعادة التخطيط الافتراضي',
++  'menu.toggleTheme': 'تبديل المظهر',
++  'menu.preview': 'معاينة حية',
++  'menu.compose': 'العودة للتحرير',
++  'panel.properties': 'الخصائص',
++  'panel.library': 'المكتبة',
++  'layout.hideLeft': 'إخفاء لوحة الخصائص',
++  'layout.showLeft': 'إظهار لوحة الخصائص',
++  'layout.hideRight': 'إخفاء لوحة القطع',
++  'layout.showRight': 'إظهار لوحة القطع',
++  'status.ready': 'جاهز',
++  'status.noSelection': 'لا يوجد تحديد',
++  'status.selected': 'التحديد',
++  'status.page': 'الصفحة',
++  'status.device': 'الجهاز',
++  'status.zoom': 'التكبير',
++  'about.version': 'الإصدار',
++  'about.close': 'إغلاق',
+ }
+ 
+ const en: Record<string, string> = {
+@@ -320,6 +350,36 @@ const en: Record<string, string> = {
+   'style.border': 'Border',
+   'style.borderRadius': 'Radius',
+   'style.boxShadow': 'Shadow',
++  'menu.file': 'File',
++  'menu.edit': 'Edit',
++  'menu.pages': 'Pages',
++  'menu.view': 'View',
++  'menu.window': 'Window',
++  'menu.help': 'Help',
++  'menu.new': 'New project',
++  'menu.about': 'About',
++  'menu.aboutText': 'Qitma — a website builder made of primitive Lego blocks that exports clean HTML/CSS.',
++  'menu.gridOverlay': 'Guide grid',
++  'menu.panelLeft': 'Properties panel',
++  'menu.panelRight': 'Blocks panel',
++  'menu.resetLayout': 'Restore default layout',
++  'menu.toggleTheme': 'Toggle theme',
++  'menu.preview': 'Live preview',
++  'menu.compose': 'Back to editing',
++  'panel.properties': 'Properties',
++  'panel.library': 'Library',
++  'layout.hideLeft': 'Hide properties panel',
++  'layout.showLeft': 'Show properties panel',
++  'layout.hideRight': 'Hide blocks panel',
++  'layout.showRight': 'Show blocks panel',
++  'status.ready': 'Ready',
++  'status.noSelection': 'No selection',
++  'status.selected': 'Selected',
++  'status.page': 'Page',
++  'status.device': 'Device',
++  'status.zoom': 'Zoom',
++  'about.version': 'Version',
++  'about.close': 'Close',
+ }
+ 
+ const DICTS: Record<Locale, Record<string, string>> = { ar, en }
+diff --git a/src/editor/index.ts b/src/editor/index.ts
+index 5f38cf9..711ae4b 100644
+--- a/src/editor/index.ts
++++ b/src/editor/index.ts
+@@ -42,6 +42,21 @@ export {
+   trackLineOffsets,
+   type GuideRect,
+ } from './canvasGuides.ts'
++export {
++  DEFAULT_LAYOUT,
++  LAYOUT_STORAGE_KEY,
++  LEFT_TABS,
++  RIGHT_TABS,
++  loadLayoutPrefs,
++  parseLayoutPrefs,
++  saveLayoutPrefs,
++  serializeLayoutPrefs,
++  type EditorLayout,
++  type EditorPanels,
++  type LeftTab,
++  type PanelId,
++  type RightTab,
++} from './layoutPrefs.ts'
+ export {
+   addNodeToPage,
+   addNodeToProject,
+@@ -147,7 +162,6 @@ export {
+   useEditorStore,
+   type Device,
+   type EditorState,
+-  type RightTab,
+   type WorkspaceMode,
+ } from './store.ts'
+ export {
+diff --git a/src/editor/layoutPrefs.test.ts b/src/editor/layoutPrefs.test.ts
+new file mode 100644
+index 0000000..471961b
+--- /dev/null
++++ b/src/editor/layoutPrefs.test.ts
+@@ -0,0 +1,57 @@
++import assert from 'node:assert/strict'
++import { describe, it } from 'node:test'
++import {
++  DEFAULT_LAYOUT,
++  LAYOUT_STORAGE_KEY,
++  loadLayoutPrefs,
++  parseLayoutPrefs,
++  saveLayoutPrefs,
++  serializeLayoutPrefs,
++  type EditorLayout,
++} from './layoutPrefs.ts'
++
++function memoryStorage(initial: Record<string, string> = {}) {
++  const store = new Map(Object.entries(initial))
++  return {
++    getItem: (key: string) => store.get(key) ?? null,
++    setItem: (key: string, value: string) => {
++      store.set(key, value)
++    },
++  }
++}
++
++describe('layout prefs', () => {
++  it('falls back to defaults for empty or broken input', () => {
++    assert.deepEqual(parseLayoutPrefs(null), DEFAULT_LAYOUT)
++    assert.deepEqual(parseLayoutPrefs('{ not json'), DEFAULT_LAYOUT)
++  })
++
++  it('keeps valid fields and repairs invalid ones', () => {
++    const parsed = parseLayoutPrefs(
++      JSON.stringify({
++        panels: { left: false, right: 'yes' },
++        gridOverlay: true,
++        leftTab: 'animation',
++        rightTab: 'nope',
++      }),
++    )
++    assert.equal(parsed.panels.left, false)
++    assert.equal(parsed.panels.right, DEFAULT_LAYOUT.panels.right)
++    assert.equal(parsed.gridOverlay, true)
++    assert.equal(parsed.leftTab, 'animation')
++    assert.equal(parsed.rightTab, DEFAULT_LAYOUT.rightTab)
++  })
++
++  it('round-trips through a storage stub', () => {
++    const storage = memoryStorage()
++    const layout: EditorLayout = {
++      panels: { left: false, right: true },
++      gridOverlay: true,
++      leftTab: 'style',
++      rightTab: 'outline',
++    }
++    saveLayoutPrefs(layout, storage)
++    assert.equal(storage.getItem(LAYOUT_STORAGE_KEY), serializeLayoutPrefs(layout))
++    assert.deepEqual(loadLayoutPrefs(storage), layout)
++  })
++})
+diff --git a/src/editor/layoutPrefs.ts b/src/editor/layoutPrefs.ts
+new file mode 100644
+index 0000000..7968ee2
+--- /dev/null
++++ b/src/editor/layoutPrefs.ts
+@@ -0,0 +1,101 @@
++export const LEFT_TABS = ['content', 'style', 'animation'] as const
++export type LeftTab = (typeof LEFT_TABS)[number]
++
++export const RIGHT_TABS = ['blocks', 'outline', 'extracted'] as const
++export type RightTab = (typeof RIGHT_TABS)[number]
++
++export type PanelId = 'left' | 'right'
++
++export type EditorPanels = {
++  left: boolean
++  right: boolean
++}
++
++export type EditorLayout = {
++  panels: EditorPanels
++  gridOverlay: boolean
++  leftTab: LeftTab
++  rightTab: RightTab
++}
++
++export const LAYOUT_STORAGE_KEY = 'qitma-layout'
++
++export const DEFAULT_LAYOUT: EditorLayout = {
++  panels: { left: true, right: true },
++  gridOverlay: false,
++  leftTab: 'content',
++  rightTab: 'blocks',
++}
++
++export function isLeftTab(value: unknown): value is LeftTab {
++  return (LEFT_TABS as readonly string[]).includes(String(value))
++}
++
++export function isRightTab(value: unknown): value is RightTab {
++  return (RIGHT_TABS as readonly string[]).includes(String(value))
++}
++
++export function isPanelId(value: unknown): value is PanelId {
++  return value === 'left' || value === 'right'
++}
++
++export function parseLayoutPrefs(raw: string | null): EditorLayout {
++  if (!raw) return cloneLayout(DEFAULT_LAYOUT)
++  try {
++    const parsed = JSON.parse(raw) as {
++      panels?: { left?: unknown; right?: unknown }
++      gridOverlay?: unknown
++      leftTab?: unknown
++      rightTab?: unknown
++    }
++    return {
++      panels: {
++        left: typeof parsed.panels?.left === 'boolean' ? parsed.panels.left : DEFAULT_LAYOUT.panels.left,
++        right:
++          typeof parsed.panels?.right === 'boolean' ? parsed.panels.right : DEFAULT_LAYOUT.panels.right,
++      },
++      gridOverlay:
++        typeof parsed.gridOverlay === 'boolean' ? parsed.gridOverlay : DEFAULT_LAYOUT.gridOverlay,
++      leftTab: isLeftTab(parsed.leftTab) ? parsed.leftTab : DEFAULT_LAYOUT.leftTab,
++      rightTab: isRightTab(parsed.rightTab) ? parsed.rightTab : DEFAULT_LAYOUT.rightTab,
++    }
++  } catch {
++    return cloneLayout(DEFAULT_LAYOUT)
++  }
++}
++
++export function cloneLayout(layout: EditorLayout): EditorLayout {
++  return {
++    panels: { ...layout.panels },
++    gridOverlay: layout.gridOverlay,
++    leftTab: layout.leftTab,
++    rightTab: layout.rightTab,
++  }
++}
++
++export function serializeLayoutPrefs(layout: EditorLayout): string {
++  return JSON.stringify(layout)
++}
++
++export function loadLayoutPrefs(
++  storage: Pick<Storage, 'getItem'> | null = typeof localStorage === 'undefined' ? null : localStorage,
++): EditorLayout {
++  if (!storage) return cloneLayout(DEFAULT_LAYOUT)
++  try {
++    return parseLayoutPrefs(storage.getItem(LAYOUT_STORAGE_KEY))
++  } catch {
++    return cloneLayout(DEFAULT_LAYOUT)
++  }
++}
++
++export function saveLayoutPrefs(
++  layout: EditorLayout,
++  storage: Pick<Storage, 'setItem'> | null = typeof localStorage === 'undefined' ? null : localStorage,
++): void {
++  if (!storage) return
++  try {
++    storage.setItem(LAYOUT_STORAGE_KEY, serializeLayoutPrefs(layout))
++  } catch {
++    /* ignore quota / private-mode errors */
++  }
++}
+diff --git a/src/editor/store.ts b/src/editor/store.ts
+index 9e5bee9..7ccd986 100644
+--- a/src/editor/store.ts
++++ b/src/editor/store.ts
+@@ -7,6 +7,17 @@ import {
+ } from './chromePrefs.ts'
+ import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './assets.ts'
+ import { createDemoProject } from './demoProject.ts'
++import {
++  cloneLayout,
++  DEFAULT_LAYOUT,
++  loadLayoutPrefs,
++  saveLayoutPrefs,
++  type EditorLayout,
++  type EditorPanels,
++  type LeftTab,
++  type PanelId,
++  type RightTab,
++} from './layoutPrefs.ts'
+ import { loadPersistedSession, savePersistedSession } from './persist.ts'
+ import { parseProjectJson, serializeProject } from './projectJson.ts'
+ import {
+@@ -52,7 +63,7 @@ import {
+ export type { Device }
+ export { DEVICE_WIDTHS }
+ 
+-export type RightTab = 'blocks' | 'outline' | 'extracted'
++export type { LeftTab, RightTab } from './layoutPrefs.ts'
+ 
+ export type WorkspaceMode = 'compose' | 'preview'
+ 
+@@ -65,6 +76,9 @@ export type EditorState = {
+   lastInsertError: string | null
+   workspace: WorkspaceMode
+   rightTab: RightTab
++  leftTab: LeftTab
++  panels: EditorPanels
++  gridOverlay: boolean
+   dropPreview: DropIntent | null
+   history: HistoryState
+   theme: EditorTheme
+@@ -76,6 +90,12 @@ export type EditorState = {
+   setZoom: (zoom: number) => void
+   setWorkspace: (mode: WorkspaceMode) => void
+   setRightTab: (tab: RightTab) => void
++  setLeftTab: (tab: LeftTab) => void
++  setPanelVisible: (panel: PanelId, visible: boolean) => void
++  togglePanel: (panel: PanelId) => void
++  setGridOverlay: (on: boolean) => void
++  toggleGridOverlay: () => void
++  resetLayout: () => void
+   setDropPreview: (preview: DropIntent | null) => void
+   setTheme: (theme: EditorTheme) => void
+   setLocale: (locale: Locale) => void
+@@ -126,9 +146,19 @@ export const useEditorStore = create<EditorState>((set, get) => {
+ 
+   const initialViewport = loadViewportPrefs()
+   const initialChrome = loadChromePrefs()
++  const initialLayout = loadLayoutPrefs()
+   const persistChrome = (theme: EditorTheme, locale: Locale) => {
+     saveChromePrefs({ theme, locale })
+   }
++  const persistLayout = (layout: EditorLayout) => {
++    saveLayoutPrefs(layout)
++  }
++  const layoutOf = (state: EditorState): EditorLayout => ({
++    panels: state.panels,
++    gridOverlay: state.gridOverlay,
++    leftTab: state.leftTab,
++    rightTab: state.rightTab,
++  })
+   const persisted = loadPersistedSession()
+   const initialProject = persisted?.project ?? createDemoProject()
+ 
+@@ -140,7 +170,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
+     zoom: initialViewport.zoom,
+     lastInsertError: null,
+     workspace: 'compose',
+-    rightTab: 'blocks',
++    rightTab: initialLayout.rightTab,
++    leftTab: initialLayout.leftTab,
++    panels: initialLayout.panels,
++    gridOverlay: initialLayout.gridOverlay,
+     dropPreview: null,
+     history: emptyHistory(),
+     theme: initialChrome.theme,
+@@ -182,7 +215,41 @@ export const useEditorStore = create<EditorState>((set, get) => {
+       }
+       set({ workspace })
+     },
+-    setRightTab: (rightTab) => set({ rightTab }),
++    setRightTab: (rightTab) => {
++      set({ rightTab })
++      persistLayout(layoutOf(get()))
++    },
++    setLeftTab: (leftTab) => {
++      set({ leftTab })
++      persistLayout(layoutOf(get()))
++    },
++    setPanelVisible: (panel, visible) => {
++      set({ panels: { ...get().panels, [panel]: visible } })
++      persistLayout(layoutOf(get()))
++    },
++    togglePanel: (panel) => {
++      const panels = get().panels
++      set({ panels: { ...panels, [panel]: !panels[panel] } })
++      persistLayout(layoutOf(get()))
++    },
++    setGridOverlay: (gridOverlay) => {
++      set({ gridOverlay })
++      persistLayout(layoutOf(get()))
++    },
++    toggleGridOverlay: () => {
++      set({ gridOverlay: !get().gridOverlay })
++      persistLayout(layoutOf(get()))
++    },
++    resetLayout: () => {
++      const layout = cloneLayout(DEFAULT_LAYOUT)
++      set({
++        panels: layout.panels,
++        gridOverlay: layout.gridOverlay,
++        leftTab: layout.leftTab,
++        rightTab: layout.rightTab,
++      })
++      persistLayout(layout)
++    },
+     setDropPreview: (dropPreview) => set({ dropPreview }),
+     setTheme: (theme) => {
+       persistChrome(theme, get().locale)

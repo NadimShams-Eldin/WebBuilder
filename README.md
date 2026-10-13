@@ -8,6 +8,8 @@ HTML/CSS/JS نظيفًا. لا قوالب جاهزة.
 
 - مواصفة التصميم: `docs/specs/2026-10-01-qitma-webbuilder-design.md`
 - خطة مراحل البناء: `docs/ROADMAP.md`
+- خطة تطوير الواجهة (UI): `docs/UI_REDESIGN.md`
+- سجل المناقشات والقرارات: `docs/DISCUSSIONS.md`
 - القطع الأساسية: تخطيط + محتوى + تفاعل (بدون سلوكيات في v1)
 - التقنية: React + Vite + TypeScript + Tailwind + Zustand
 
