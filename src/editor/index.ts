@@ -43,6 +43,21 @@ export {
   type GuideRect,
 } from './canvasGuides.ts'
 export {
+  DEFAULT_LAYOUT,
+  LAYOUT_STORAGE_KEY,
+  LEFT_TABS,
+  RIGHT_TABS,
+  loadLayoutPrefs,
+  parseLayoutPrefs,
+  saveLayoutPrefs,
+  serializeLayoutPrefs,
+  type EditorLayout,
+  type EditorPanels,
+  type LeftTab,
+  type PanelId,
+  type RightTab,
+} from './layoutPrefs.ts'
+export {
   addNodeToPage,
   addNodeToProject,
   canDrop,
@@ -147,7 +162,6 @@ export {
   useEditorStore,
   type Device,
   type EditorState,
-  type RightTab,
   type WorkspaceMode,
 } from './store.ts'
 export {

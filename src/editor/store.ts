@@ -7,6 +7,17 @@ import {
 } from './chromePrefs.ts'
 import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './assets.ts'
 import { createDemoProject } from './demoProject.ts'
+import {
+  cloneLayout,
+  DEFAULT_LAYOUT,
+  loadLayoutPrefs,
+  saveLayoutPrefs,
+  type EditorLayout,
+  type EditorPanels,
+  type LeftTab,
+  type PanelId,
+  type RightTab,
+} from './layoutPrefs.ts'
 import { loadPersistedSession, savePersistedSession } from './persist.ts'
 import { parseProjectJson, serializeProject } from './projectJson.ts'
 import {
@@ -52,7 +63,7 @@ import {
 export type { Device }
 export { DEVICE_WIDTHS }
 
-export type RightTab = 'blocks' | 'outline' | 'extracted'
+export type { LeftTab, RightTab } from './layoutPrefs.ts'
 
 export type WorkspaceMode = 'compose' | 'preview'
 
@@ -65,6 +76,9 @@ export type EditorState = {
   lastInsertError: string | null
   workspace: WorkspaceMode
   rightTab: RightTab
+  leftTab: LeftTab
+  panels: EditorPanels
+  gridOverlay: boolean
   dropPreview: DropIntent | null
   history: HistoryState
   theme: EditorTheme
@@ -76,6 +90,12 @@ export type EditorState = {
   setZoom: (zoom: number) => void
   setWorkspace: (mode: WorkspaceMode) => void
   setRightTab: (tab: RightTab) => void
+  setLeftTab: (tab: LeftTab) => void
+  setPanelVisible: (panel: PanelId, visible: boolean) => void
+  togglePanel: (panel: PanelId) => void
+  setGridOverlay: (on: boolean) => void
+  toggleGridOverlay: () => void
+  resetLayout: () => void
   setDropPreview: (preview: DropIntent | null) => void
   setTheme: (theme: EditorTheme) => void
   setLocale: (locale: Locale) => void
@@ -126,8 +146,18 @@ export const useEditorStore = create<EditorState>((set, get) => {
 
   const initialViewport = loadViewportPrefs()
   const initialChrome = loadChromePrefs()
+  const initialLayout = loadLayoutPrefs()
   const persistChrome = (theme: EditorTheme, locale: Locale) => {
     saveChromePrefs({ theme, locale })
+  }
+  const layoutOf = (state: EditorState): EditorLayout => ({
+    panels: state.panels,
+    gridOverlay: state.gridOverlay,
+    leftTab: state.leftTab,
+    rightTab: state.rightTab,
+  })
+  const persistLayout = (state: EditorState) => {
+    saveLayoutPrefs(layoutOf(state))
   }
   const persisted = loadPersistedSession()
   const initialProject = persisted?.project ?? createDemoProject()
@@ -140,7 +170,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
     zoom: initialViewport.zoom,
     lastInsertError: null,
     workspace: 'compose',
-    rightTab: 'blocks',
+    rightTab: initialLayout.rightTab,
+    leftTab: initialLayout.leftTab,
+    panels: initialLayout.panels,
+    gridOverlay: initialLayout.gridOverlay,
     dropPreview: null,
     history: emptyHistory(),
     theme: initialChrome.theme,
@@ -182,7 +215,41 @@ export const useEditorStore = create<EditorState>((set, get) => {
       }
       set({ workspace })
     },
-    setRightTab: (rightTab) => set({ rightTab }),
+    setRightTab: (rightTab) => {
+      set({ rightTab })
+      persistLayout(get())
+    },
+    setLeftTab: (leftTab) => {
+      set({ leftTab })
+      persistLayout(get())
+    },
+    setPanelVisible: (panel, visible) => {
+      set({ panels: { ...get().panels, [panel]: visible } })
+      persistLayout(get())
+    },
+    togglePanel: (panel) => {
+      const panels = get().panels
+      set({ panels: { ...panels, [panel]: !panels[panel] } })
+      persistLayout(get())
+    },
+    setGridOverlay: (gridOverlay) => {
+      set({ gridOverlay })
+      persistLayout(get())
+    },
+    toggleGridOverlay: () => {
+      set({ gridOverlay: !get().gridOverlay })
+      persistLayout(get())
+    },
+    resetLayout: () => {
+      const layout = cloneLayout(DEFAULT_LAYOUT)
+      set({
+        panels: layout.panels,
+        gridOverlay: layout.gridOverlay,
+        leftTab: layout.leftTab,
+        rightTab: layout.rightTab,
+      })
+      persistLayout(get())
+    },
     setDropPreview: (dropPreview) => set({ dropPreview }),
     setTheme: (theme) => {
       persistChrome(theme, get().locale)
