@@ -69,6 +69,7 @@ export function Canvas() {
   const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
   const deleteSelected = useEditorStore((s) => s.deleteSelected)
   const workspace = useEditorStore((s) => s.workspace)
+  const gridOverlay = useEditorStore((s) => s.gridOverlay)
   const preview = workspace === 'preview'
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const { active } = useDndContext()
@@ -214,6 +215,7 @@ export function Canvas() {
   }, [preview, setSelectedId, setRightTab, setActivePage])
 
   const showGuides = !preview && !dropBox
+  const showGridLines = showGuides && gridOverlay
 
   return (
     <div
@@ -279,7 +281,7 @@ export function Canvas() {
               }}
             />
           ) : null}
-          {showGuides && overlay && gridLines
+          {showGridLines && overlay && gridLines
             ? gridLines.vertical.map((left, index) => (
                 <div
                   key={`gv-${index}`}
@@ -289,7 +291,7 @@ export function Canvas() {
                 />
               ))
             : null}
-          {showGuides && overlay && gridLines
+          {showGridLines && overlay && gridLines
             ? gridLines.horizontal.map((top, index) => (
                 <div
                   key={`gh-${index}`}

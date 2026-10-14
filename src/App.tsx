@@ -1,9 +1,12 @@
 import { useEffect } from 'react'
-import { AppHeader } from './components/AppHeader'
 import { CanvasArea } from './components/CanvasArea'
 import { EditorDnd } from './components/EditorDnd'
 import { LeftPanel } from './components/LeftPanel'
+import { MenuBar } from './components/MenuBar'
+import { PageTabs } from './components/PageTabs'
 import { RightPanel } from './components/RightPanel'
+import { StatusBar } from './components/StatusBar'
+import { Toolbar } from './components/Toolbar'
 import { localeDir } from './editor/chromePrefs.ts'
 import { useEditorStore } from './editor/store.ts'
 
@@ -11,6 +14,7 @@ export default function App() {
   const theme = useEditorStore((s) => s.theme)
   const locale = useEditorStore((s) => s.locale)
   const workspace = useEditorStore((s) => s.workspace)
+  const panels = useEditorStore((s) => s.panels)
   const preview = workspace === 'preview'
   const dir = localeDir(locale)
 
@@ -27,12 +31,17 @@ export default function App() {
         dir={dir}
         className="flex h-screen flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
       >
-        <AppHeader />
+        <MenuBar />
+        {preview ? null : <Toolbar />}
         <div className="flex min-h-0 flex-1">
-          {preview ? null : <RightPanel />}
-          <CanvasArea />
-          {preview ? null : <LeftPanel />}
+          {!preview && panels.right ? <RightPanel /> : null}
+          <div className="flex min-h-0 flex-1 flex-col">
+            {preview ? null : <PageTabs />}
+            <CanvasArea />
+          </div>
+          {!preview && panels.left ? <LeftPanel /> : null}
         </div>
+        {preview ? null : <StatusBar />}
       </div>
     </EditorDnd>
   )
