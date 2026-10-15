@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Breadcrumb } from './components/Breadcrumb'
 import { CanvasArea } from './components/CanvasArea'
 import { EditorDnd } from './components/EditorDnd'
 import { LeftPanel } from './components/LeftPanel'
@@ -46,6 +47,7 @@ export default function App() {
           <div className="flex min-h-0 flex-1 flex-col">
             {preview ? null : <PageTabs />}
             <CanvasArea />
+            {preview ? null : <Breadcrumb />}
           </div>
           {preview ? null : panels.left ? (
             <>

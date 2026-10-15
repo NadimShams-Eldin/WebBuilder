@@ -45,6 +45,9 @@ import {
 import {
   addNodeToProject,
   clearPageInProject,
+  findNode,
+  findParent,
+  getAncestorIds,
   insertAtDropInProject,
   moveNodeInProject,
   duplicateNodeInProject,
@@ -110,6 +113,8 @@ export type EditorState = {
   updateNodeById: (id: string, patch: NodePatch) => void
   duplicateSelected: () => boolean
   deleteSelected: () => boolean
+  duplicateNodes: (ids: string[]) => boolean
+  deleteNodes: (ids: string[]) => boolean
   clearPage: () => boolean
   addPage: (name?: string) => boolean
   removePage: (pageId?: string) => boolean
@@ -326,34 +331,69 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const next = updateNodeInProject(project, id, patch, activePageId)
       if (next) commit({ project: next, selectedId: id }, id)
     },
-    duplicateSelected: () => {
-      const { project, selectedId, activePageId } = get()
-      if (!selectedId) return false
-      const result = duplicateNodeInProject(project, selectedId, activePageId)
-      if (!result) return false
+    duplicateNodes: (ids) => {
+      const { project, activePageId } = get()
+      if (ids.length === 0) return false
+      let next = project
+      const created: string[] = []
+      for (const id of ids) {
+        const result = duplicateNodeInProject(next, id, activePageId)
+        if (!result) continue
+        next = result.project
+        created.push(result.node.id)
+      }
+      if (created.length === 0) return false
       commit({
-        project: result.project,
-        selectedId: result.node.id,
+        project: next,
+        selectedId: created[created.length - 1],
+        lastInsertError: null,
+        dropPreview: null,
+      })
+      return true
+    },
+    duplicateSelected: () => {
+      const { selectedId } = get()
+      return selectedId ? get().duplicateNodes([selectedId]) : false
+    },
+    deleteNodes: (ids) => {
+      const { project, activePageId, locale } = get()
+      if (ids.length === 0) return false
+      const page = resolvePage(project, activePageId)
+      const root = page?.root ?? null
+      const ordered = root
+        ? [...ids].sort((a, b) => getAncestorIds(root, b).length - getAncestorIds(root, a).length)
+        : [...ids]
+      let next = project
+      let removed = false
+      for (const id of ordered) {
+        const result = removeNodeInProject(next, id, activePageId)
+        if (result) {
+          next = result.project
+          removed = true
+        }
+      }
+      if (!removed) {
+        set({ lastInsertError: translate(locale, 'error.deleteRoot') })
+        return false
+      }
+      const primaryId = ids[ids.length - 1]
+      const parentCandidate = page && primaryId ? findParent(page.root, primaryId) : null
+      const nextPage = resolvePage(next, activePageId)
+      const parent =
+        parentCandidate && nextPage && findNode(nextPage.root, parentCandidate.id)
+          ? parentCandidate
+          : null
+      commit({
+        project: next,
+        selectedId: parent?.id ?? null,
         lastInsertError: null,
         dropPreview: null,
       })
       return true
     },
     deleteSelected: () => {
-      const { project, selectedId, activePageId, locale } = get()
-      if (!selectedId) return false
-      const result = removeNodeInProject(project, selectedId, activePageId)
-      if (!result) {
-        set({ lastInsertError: translate(locale, 'error.deleteRoot') })
-        return false
-      }
-      commit({
-        project: result.project,
-        selectedId: result.parentId,
-        lastInsertError: null,
-        dropPreview: null,
-      })
-      return true
+      const { selectedId } = get()
+      return selectedId ? get().deleteNodes([selectedId]) : false
     },
     clearPage: () => {
       const { project, activePageId } = get()

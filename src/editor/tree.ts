@@ -38,6 +38,25 @@ export function getAncestorIds(root: Node, id: string): string[] {
   return path
 }
 
+export function getPathNodes(root: Node, id: string): Node[] {
+  const path: Node[] = []
+
+  const walk = (node: Node, acc: Node[]): boolean => {
+    const next = [...acc, node]
+    if (node.id === id) {
+      path.push(...next)
+      return true
+    }
+    for (const child of node.children) {
+      if (walk(child, next)) return true
+    }
+    return false
+  }
+
+  walk(root, [])
+  return path
+}
+
 export type InsertTarget = {
   parentId: string
   index: number

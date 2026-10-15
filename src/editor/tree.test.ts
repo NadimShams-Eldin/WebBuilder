@@ -10,6 +10,7 @@ import {
   clearPageInProject,
   findNode,
   getAncestorIds,
+  getPathNodes,
   insertAtDrop,
   moveNode,
   cloneNode,
@@ -96,6 +97,22 @@ describe('getAncestorIds', () => {
     assert.deepEqual(getAncestorIds(root, 't'), ['r', 'f'])
     assert.deepEqual(getAncestorIds(root, 'r'), [])
     assert.deepEqual(getAncestorIds(root, 'missing'), [])
+  })
+})
+
+describe('getPathNodes', () => {
+  it('returns root-to-node nodes', () => {
+    const text = createNode('text', 't')
+    const flex = createNode('flex', 'f')
+    flex.children = [text]
+    const root = createNode('container', 'r')
+    root.children = [flex]
+    assert.deepEqual(
+      getPathNodes(root, 't').map((node) => node.id),
+      ['r', 'f', 't'],
+    )
+    assert.deepEqual(getPathNodes(root, 'r').map((node) => node.id), ['r'])
+    assert.deepEqual(getPathNodes(root, 'missing'), [])
   })
 })
 
