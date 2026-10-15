@@ -14,6 +14,21 @@ export type StyleField = {
   labelKey: string
   kind: FieldKind
   optionKeys?: Array<{ value: string; labelKey?: string }>
+  unit?: boolean
+  quick?: string[]
+}
+
+export const LENGTH_UNITS = ['px', '%', 'rem', 'em', 'vw', 'vh'] as const
+
+export function splitLength(value: string): { number: string; unit: string } {
+  const match = /^(-?\d*\.?\d+)\s*([a-z%]*)$/i.exec(value.trim())
+  if (!match) return { number: '', unit: '' }
+  return { number: match[1], unit: match[2] || 'px' }
+}
+
+export function joinLength(value: string, unit: string): string {
+  if (value === '') return ''
+  return /^-?\d*\.?\d+$/.test(value.trim()) ? `${value}${unit}` : value
 }
 
 export const CONTENT_FIELDS: Partial<Record<NodeType, PropField[]>> = {
@@ -138,35 +153,69 @@ export const STYLE_GROUPS: Array<{ id: string; labelKey: string; fields: StyleFi
         kind: 'select',
         optionKeys: ['stretch', 'flex-start', 'center', 'flex-end'].map((v) => ({ value: v })),
       },
-      { prop: 'gap', labelKey: 'style.gap', kind: 'text' },
-      { prop: 'gridTemplateColumns', labelKey: 'style.gridTemplateColumns', kind: 'text' },
+      {
+        prop: 'gap',
+        labelKey: 'style.gap',
+        kind: 'text',
+        unit: true,
+        quick: ['0', '4px', '8px', '12px', '16px', '24px'],
+      },
+      {
+        prop: 'gridTemplateColumns',
+        labelKey: 'style.gridTemplateColumns',
+        kind: 'text',
+        quick: ['1fr', '1fr 1fr', '1fr 1fr 1fr', 'repeat(3, 1fr)'],
+      },
     ],
   },
   {
     id: 'dimensions',
     labelKey: 'style.dimensions',
     fields: [
-      { prop: 'width', labelKey: 'style.width', kind: 'text' },
-      { prop: 'height', labelKey: 'style.height', kind: 'text' },
-      { prop: 'maxWidth', labelKey: 'style.maxWidth', kind: 'text' },
-      { prop: 'minHeight', labelKey: 'style.minHeight', kind: 'text' },
+      { prop: 'width', labelKey: 'style.width', kind: 'text', unit: true, quick: ['auto', '100%', '50%'] },
+      { prop: 'height', labelKey: 'style.height', kind: 'text', unit: true, quick: ['auto', '100%'] },
+      { prop: 'maxWidth', labelKey: 'style.maxWidth', kind: 'text', unit: true, quick: ['480px', '768px', '1200px'] },
+      { prop: 'minHeight', labelKey: 'style.minHeight', kind: 'text', unit: true, quick: ['0', '100vh'] },
     ],
   },
   {
     id: 'spacing',
     labelKey: 'style.spacing',
     fields: [
-      { prop: 'padding', labelKey: 'style.padding', kind: 'text' },
-      { prop: 'margin', labelKey: 'style.margin', kind: 'text' },
+      {
+        prop: 'padding',
+        labelKey: 'style.padding',
+        kind: 'text',
+        unit: true,
+        quick: ['0', '4px', '8px', '16px', '24px', '32px'],
+      },
+      {
+        prop: 'margin',
+        labelKey: 'style.margin',
+        kind: 'text',
+        unit: true,
+        quick: ['0', 'auto', '8px', '16px', '24px'],
+      },
     ],
   },
   {
     id: 'typography',
     labelKey: 'style.typography',
     fields: [
-      { prop: 'fontSize', labelKey: 'style.fontSize', kind: 'text' },
-      { prop: 'fontWeight', labelKey: 'style.fontWeight', kind: 'text' },
-      { prop: 'lineHeight', labelKey: 'style.lineHeight', kind: 'text' },
+      {
+        prop: 'fontSize',
+        labelKey: 'style.fontSize',
+        kind: 'text',
+        unit: true,
+        quick: ['12px', '14px', '16px', '20px', '24px', '32px'],
+      },
+      {
+        prop: 'fontWeight',
+        labelKey: 'style.fontWeight',
+        kind: 'text',
+        quick: ['400', '500', '600', '700'],
+      },
+      { prop: 'lineHeight', labelKey: 'style.lineHeight', kind: 'text', quick: ['1', '1.25', '1.5', '2'] },
       {
         prop: 'textAlign',
         labelKey: 'style.textAlign',
@@ -187,9 +236,27 @@ export const STYLE_GROUPS: Array<{ id: string; labelKey: string; fields: StyleFi
     id: 'borders',
     labelKey: 'style.borders',
     fields: [
-      { prop: 'border', labelKey: 'style.border', kind: 'text' },
-      { prop: 'borderRadius', labelKey: 'style.borderRadius', kind: 'text' },
-      { prop: 'boxShadow', labelKey: 'style.boxShadow', kind: 'text' },
+      { prop: 'border', labelKey: 'style.border', kind: 'text', quick: ['none', '1px solid'] },
+      {
+        prop: 'borderRadius',
+        labelKey: 'style.borderRadius',
+        kind: 'text',
+        unit: true,
+        quick: ['0', '4px', '8px', '16px', '9999px'],
+      },
+    ],
+  },
+  {
+    id: 'effects',
+    labelKey: 'style.effects',
+    fields: [
+      {
+        prop: 'boxShadow',
+        labelKey: 'style.boxShadow',
+        kind: 'text',
+        quick: ['none', '0 1px 2px rgba(0,0,0,.1)', '0 4px 12px rgba(0,0,0,.15)'],
+      },
+      { prop: 'opacity', labelKey: 'style.opacity', kind: 'text', quick: ['1', '0.75', '0.5'] },
     ],
   },
 ]
