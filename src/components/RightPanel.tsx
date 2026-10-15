@@ -36,6 +36,7 @@ export function RightPanel() {
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
   const tab = useEditorStore((s) => s.rightTab)
   const setTab = useEditorStore((s) => s.setRightTab)
+  const width = useEditorStore((s) => s.panelWidths.right)
   const page = useEditorStore(selectActivePage)
   const tabClass = (id: RightTab) =>
     tab === id
@@ -43,7 +44,10 @@ export function RightPanel() {
       : 'flex-1 rounded-md px-2 py-1.5 text-xs text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <aside
+      style={{ width }}
+      className="flex h-full shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+    >
       <div className="flex items-center gap-1 border-b border-neutral-200 p-2 text-sm dark:border-neutral-800">
         <button type="button" onClick={() => setTab('blocks')} className={tabClass('blocks')}>
           {t('tabs.blocks')}

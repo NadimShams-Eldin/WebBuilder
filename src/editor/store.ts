@@ -8,6 +8,7 @@ import {
 import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './assets.ts'
 import { createDemoProject } from './demoProject.ts'
 import {
+  clampPanelWidth,
   cloneLayout,
   DEFAULT_LAYOUT,
   loadLayoutPrefs,
@@ -16,6 +17,7 @@ import {
   type EditorPanels,
   type LeftTab,
   type PanelId,
+  type PanelWidths,
   type RightTab,
 } from './layoutPrefs.ts'
 import { loadPersistedSession, savePersistedSession } from './persist.ts'
@@ -78,6 +80,7 @@ export type EditorState = {
   rightTab: RightTab
   leftTab: LeftTab
   panels: EditorPanels
+  panelWidths: PanelWidths
   gridOverlay: boolean
   dropPreview: DropIntent | null
   history: HistoryState
@@ -92,6 +95,7 @@ export type EditorState = {
   setRightTab: (tab: RightTab) => void
   setLeftTab: (tab: LeftTab) => void
   setPanelVisible: (panel: PanelId, visible: boolean) => void
+  setPanelWidth: (panel: PanelId, width: number) => void
   togglePanel: (panel: PanelId) => void
   setGridOverlay: (on: boolean) => void
   toggleGridOverlay: () => void
@@ -152,6 +156,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
   }
   const layoutOf = (state: EditorState): EditorLayout => ({
     panels: state.panels,
+    widths: state.panelWidths,
     gridOverlay: state.gridOverlay,
     leftTab: state.leftTab,
     rightTab: state.rightTab,
@@ -173,6 +178,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     rightTab: initialLayout.rightTab,
     leftTab: initialLayout.leftTab,
     panels: initialLayout.panels,
+    panelWidths: initialLayout.widths,
     gridOverlay: initialLayout.gridOverlay,
     dropPreview: null,
     history: emptyHistory(),
@@ -227,6 +233,11 @@ export const useEditorStore = create<EditorState>((set, get) => {
       set({ panels: { ...get().panels, [panel]: visible } })
       persistLayout(get())
     },
+    setPanelWidth: (panel, width) => {
+      const panelWidths = { ...get().panelWidths, [panel]: clampPanelWidth(width) }
+      set({ panelWidths })
+      persistLayout(get())
+    },
     togglePanel: (panel) => {
       const panels = get().panels
       set({ panels: { ...panels, [panel]: !panels[panel] } })
@@ -244,6 +255,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const layout = cloneLayout(DEFAULT_LAYOUT)
       set({
         panels: layout.panels,
+        panelWidths: layout.widths,
         gridOverlay: layout.gridOverlay,
         leftTab: layout.leftTab,
         rightTab: layout.rightTab,

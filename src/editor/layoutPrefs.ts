@@ -11,8 +11,14 @@ export type EditorPanels = {
   right: boolean
 }
 
+export type PanelWidths = {
+  left: number
+  right: number
+}
+
 export type EditorLayout = {
   panels: EditorPanels
+  widths: PanelWidths
   gridOverlay: boolean
   leftTab: LeftTab
   rightTab: RightTab
@@ -20,11 +26,21 @@ export type EditorLayout = {
 
 export const LAYOUT_STORAGE_KEY = 'qitma-layout'
 
+export const PANEL_MIN_WIDTH = 200
+export const PANEL_MAX_WIDTH = 480
+export const PANEL_DEFAULT_WIDTH = 288
+
 export const DEFAULT_LAYOUT: EditorLayout = {
   panels: { left: true, right: true },
+  widths: { left: PANEL_DEFAULT_WIDTH, right: PANEL_DEFAULT_WIDTH },
   gridOverlay: false,
   leftTab: 'content',
   rightTab: 'blocks',
+}
+
+export function clampPanelWidth(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return PANEL_DEFAULT_WIDTH
+  return Math.round(Math.min(PANEL_MAX_WIDTH, Math.max(PANEL_MIN_WIDTH, value)))
 }
 
 export function isLeftTab(value: unknown): value is LeftTab {
@@ -42,6 +58,7 @@ export function isPanelId(value: unknown): value is PanelId {
 export function cloneLayout(layout: EditorLayout): EditorLayout {
   return {
     panels: { ...layout.panels },
+    widths: { ...layout.widths },
     gridOverlay: layout.gridOverlay,
     leftTab: layout.leftTab,
     rightTab: layout.rightTab,
@@ -53,6 +70,7 @@ export function parseLayoutPrefs(raw: string | null): EditorLayout {
   try {
     const parsed = JSON.parse(raw) as {
       panels?: { left?: unknown; right?: unknown }
+      widths?: { left?: unknown; right?: unknown }
       gridOverlay?: unknown
       leftTab?: unknown
       rightTab?: unknown
@@ -62,6 +80,10 @@ export function parseLayoutPrefs(raw: string | null): EditorLayout {
         left: typeof parsed.panels?.left === 'boolean' ? parsed.panels.left : DEFAULT_LAYOUT.panels.left,
         right:
           typeof parsed.panels?.right === 'boolean' ? parsed.panels.right : DEFAULT_LAYOUT.panels.right,
+      },
+      widths: {
+        left: clampPanelWidth(parsed.widths?.left),
+        right: clampPanelWidth(parsed.widths?.right),
       },
       gridOverlay:
         typeof parsed.gridOverlay === 'boolean' ? parsed.gridOverlay : DEFAULT_LAYOUT.gridOverlay,

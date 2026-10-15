@@ -363,6 +363,7 @@ export function LeftPanel() {
   const project = useEditorStore((s) => s.project)
   const selectedId = useEditorStore((s) => s.selectedId)
   const updateSelected = useEditorStore((s) => s.updateSelected)
+  const width = useEditorStore((s) => s.panelWidths.left)
   const [tab, setTab] = useState<PanelTab>('content')
   const page = useEditorStore(selectActivePage)
   const node = page && selectedId ? findNode(page.root, selectedId) : null
@@ -372,7 +373,10 @@ export function LeftPanel() {
       : 'flex-1 rounded-md px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-800'
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <aside
+      style={{ width }}
+      className="flex h-full shrink-0 flex-col border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+    >
       <div className="border-b border-neutral-200 p-3 dark:border-neutral-800">
         <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{t('panel.props')}</p>
         {node ? (

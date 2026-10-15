@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  clampPanelWidth,
   DEFAULT_LAYOUT,
   LAYOUT_STORAGE_KEY,
   loadLayoutPrefs,
+  PANEL_MAX_WIDTH,
+  PANEL_MIN_WIDTH,
   parseLayoutPrefs,
   saveLayoutPrefs,
   serializeLayoutPrefs,
@@ -42,10 +45,20 @@ describe('layout prefs', () => {
     assert.equal(parsed.rightTab, DEFAULT_LAYOUT.rightTab)
   })
 
+  it('clamps panel widths within bounds', () => {
+    assert.equal(clampPanelWidth(1000), PANEL_MAX_WIDTH)
+    assert.equal(clampPanelWidth(50), PANEL_MIN_WIDTH)
+    assert.equal(clampPanelWidth('wide'), DEFAULT_LAYOUT.widths.left)
+    const parsed = parseLayoutPrefs(JSON.stringify({ widths: { left: 999, right: 120 } }))
+    assert.equal(parsed.widths.left, PANEL_MAX_WIDTH)
+    assert.equal(parsed.widths.right, PANEL_MIN_WIDTH)
+  })
+
   it('round-trips through a storage stub', () => {
     const storage = memoryStorage()
     const layout: EditorLayout = {
       panels: { left: false, right: true },
+      widths: { left: 320, right: 240 },
       gridOverlay: true,
       leftTab: 'style',
       rightTab: 'outline',

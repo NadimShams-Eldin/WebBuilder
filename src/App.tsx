@@ -4,6 +4,7 @@ import { EditorDnd } from './components/EditorDnd'
 import { LeftPanel } from './components/LeftPanel'
 import { MenuBar } from './components/MenuBar'
 import { PageTabs } from './components/PageTabs'
+import { PanelCollapseStrip, PanelResizer } from './components/PanelResizer'
 import { RightPanel } from './components/RightPanel'
 import { StatusBar } from './components/StatusBar'
 import { Toolbar } from './components/Toolbar'
@@ -34,12 +35,26 @@ export default function App() {
         <MenuBar />
         {preview ? null : <Toolbar />}
         <div className="flex min-h-0 flex-1">
-          {!preview && panels.right ? <RightPanel /> : null}
+          {preview ? null : panels.right ? (
+            <>
+              <RightPanel />
+              <PanelResizer panel="right" />
+            </>
+          ) : (
+            <PanelCollapseStrip panel="right" />
+          )}
           <div className="flex min-h-0 flex-1 flex-col">
             {preview ? null : <PageTabs />}
             <CanvasArea />
           </div>
-          {!preview && panels.left ? <LeftPanel /> : null}
+          {preview ? null : panels.left ? (
+            <>
+              <PanelResizer panel="left" />
+              <LeftPanel />
+            </>
+          ) : (
+            <PanelCollapseStrip panel="left" />
+          )}
         </div>
         {preview ? null : <StatusBar />}
       </div>
