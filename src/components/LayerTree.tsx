@@ -10,6 +10,8 @@ import { getAncestorIds, type DropIntent } from '../editor/tree.ts'
 import type { Node, NodeType } from '../editor/types.ts'
 import { useI18n } from '../editor/useI18n.ts'
 import { useEditorStore } from '../editor/store.ts'
+import { ContextMenu } from './ContextMenu'
+import { useNodeContextMenu } from './useNodeContextMenu'
 
 type LayerTreeProps = {
   root: Node
@@ -66,6 +68,7 @@ function LayerItem({
   searching,
   onSelect,
   onToggle,
+  onContextMenu,
   depth,
   disableDrag,
 }: {
@@ -78,6 +81,7 @@ function LayerItem({
   searching: boolean
   onSelect: (id: string, event: ReactMouseEvent) => void
   onToggle: (id: string) => void
+  onContextMenu: (id: string, event: ReactMouseEvent) => void
   depth: number
   disableDrag: boolean
 }) {
@@ -120,6 +124,7 @@ function LayerItem({
       <div
         ref={setRef}
         className={rowClass}
+        onContextMenu={(event) => onContextMenu(node.id, event)}
         style={{
           paddingInlineStart: `${0.25 + depth * 0.75}rem`,
           opacity: isDragging ? 0.45 : 1,
@@ -186,6 +191,7 @@ function LayerItem({
                 searching={searching}
                 onSelect={onSelect}
                 onToggle={onToggle}
+                onContextMenu={onContextMenu}
                 depth={depth + 1}
                 disableDrag={false}
               />
@@ -199,6 +205,7 @@ export function LayerTree({ root, selectedId, dropPreview, onSelect }: LayerTree
   const { t } = useI18n()
   const deleteNodes = useEditorStore((s) => s.deleteNodes)
   const duplicateNodes = useEditorStore((s) => s.duplicateNodes)
+  const { menu, openMenu, closeMenu } = useNodeContextMenu()
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set())
   const [query, setQuery] = useState('')
   const [multi, setMulti] = useState<Set<string>>(() => new Set())
@@ -265,6 +272,13 @@ export function LayerTree({ root, selectedId, dropPreview, onSelect }: LayerTree
     onSelect(id)
   }
 
+  const handleContextMenu = (id: string, event: ReactMouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setMulti(new Set())
+    openMenu(id, event.clientX, event.clientY)
+  }
+
   const selection = [...effective]
   const isBulk = selection.length > 1
   const runBulk = (action: 'duplicate' | 'delete') => {
@@ -319,10 +333,12 @@ export function LayerTree({ root, selectedId, dropPreview, onSelect }: LayerTree
           searching={searching}
           onSelect={handleSelect}
           onToggle={onToggle}
+          onContextMenu={handleContextMenu}
           depth={0}
           disableDrag
         />
       )}
+      {menu ? <ContextMenu menu={menu} onClose={closeMenu} /> : null}
     </div>
   )
 }

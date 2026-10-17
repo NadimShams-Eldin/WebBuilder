@@ -2,7 +2,6 @@ import { useDndContext } from '@dnd-kit/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   collectEmptyContainerIds,
-  floatingMenuPosition,
   gridOverlayLines,
   measureSegments,
 } from '../editor/canvasGuides.ts'
@@ -13,6 +12,9 @@ import { DEVICE_WIDTHS, getActivePage, useEditorStore } from '../editor/store.ts
 import { findNode } from '../editor/tree.ts'
 import { useI18n } from '../editor/useI18n.ts'
 import { CanvasGuides } from './CanvasGuides'
+import { ContextMenu } from './ContextMenu'
+import { SelectionToolbar } from './SelectionToolbar'
+import { useNodeContextMenu } from './useNodeContextMenu'
 
 type OverlayRect = { top: number; left: number; width: number; height: number }
 
@@ -24,6 +26,8 @@ type CanvasMessage = {
   id?: string | null
   pageId?: string | null
   alt?: boolean
+  x?: number
+  y?: number
 }
 
 function queryNodeRect(doc: Document, id: string): OverlayRect | null {
@@ -70,9 +74,8 @@ export function Canvas() {
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
   const setActivePage = useEditorStore((s) => s.setActivePage)
   const setRightTab = useEditorStore((s) => s.setRightTab)
-  const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
-  const deleteSelected = useEditorStore((s) => s.deleteSelected)
   const updateNodeById = useEditorStore((s) => s.updateNodeById)
+  const { menu, openMenu, closeMenu } = useNodeContextMenu()
   const workspace = useEditorStore((s) => s.workspace)
   const gridOverlay = useEditorStore((s) => s.gridOverlay)
   const preview = workspace === 'preview'
@@ -85,7 +88,6 @@ export function Canvas() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [emptyRects, setEmptyRects] = useState<OverlayRect[]>([])
   const [gridLines, setGridLines] = useState<GridLines | null>(null)
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
   const [dropBox, setDropBox] = useState<IndicatorBox | null>(null)
   const [altDown, setAltDown] = useState(false)
   const [frameEl, setFrameEl] = useState<HTMLIFrameElement | null>(null)
@@ -97,7 +99,6 @@ export function Canvas() {
     [project, page, preview],
   )
   const rtl = project.theme.direction !== 'ltr'
-  const canMutateSelected = Boolean(selectedId && page && selectedId !== page.root.id)
 
   const width = DEVICE_WIDTHS[device]
 
@@ -113,16 +114,12 @@ export function Canvas() {
     if (!doc || !selectedId || preview) {
       setOverlay(null)
       setGridLines(null)
-      setMenuPos(null)
       return
     }
     const rect = queryNodeRect(doc, selectedId)
     setOverlay(rect)
     setGridLines(rect ? queryGridLines(doc, selectedId, rect) : null)
-    setMenuPos(
-      rect && canMutateSelected ? floatingMenuPosition(rect, width, rtl) : null,
-    )
-  }, [selectedId, preview, canMutateSelected, width, rtl])
+  }, [selectedId, preview])
 
   const activeHoverId = preview || dragging ? null : hoveredId
   const syncHover = useCallback(() => {
@@ -229,6 +226,17 @@ export function Canvas() {
         setAltDown(Boolean(event.data.alt))
         return
       }
+      if (event.data.type === 'contextmenu') {
+        const frame = iframeRef.current
+        if (!frame) return
+        const bounds = frame.getBoundingClientRect()
+        openMenu(
+          event.data.id ?? page?.root.id ?? null,
+          bounds.left + (event.data.x ?? 0) * zoom,
+          bounds.top + (event.data.y ?? 0) * zoom,
+        )
+        return
+      }
       if (event.data.type === 'hover') {
         setHoveredId(event.data.id ?? null)
         return
@@ -239,7 +247,7 @@ export function Canvas() {
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
-  }, [preview, setSelectedId, setRightTab, setActivePage])
+  }, [preview, setSelectedId, setRightTab, setActivePage, openMenu, zoom, page?.root.id])
 
   const showGuides = !preview && !dropBox
   const showGridLines = showGuides && gridOverlay
@@ -253,6 +261,11 @@ export function Canvas() {
     <div
       className="relative shadow-sm"
       style={{ width: width * zoom, height: frameHeight * zoom }}
+      onContextMenu={(event) => {
+        if (event.target !== event.currentTarget || !page || preview) return
+        event.preventDefault()
+        openMenu(page.root.id, event.clientX, event.clientY)
+      }}
     >
       <div
         className="absolute top-0 left-0 origin-top-left"
@@ -411,27 +424,8 @@ export function Canvas() {
                 ),
               )
             : null}
-          {showGuides && menuPos && canMutateSelected ? (
-            <div
-              className="pointer-events-auto absolute z-10 flex overflow-hidden rounded-md border border-neutral-200 bg-white text-xs shadow-sm dark:border-neutral-700 dark:bg-neutral-900"
-              data-guide="menu"
-              style={{ top: menuPos.top, left: menuPos.left }}
-            >
-              <button
-                type="button"
-                className="px-2 py-1 text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                onClick={() => duplicateSelected()}
-              >
-                {t('guide.duplicate')}
-              </button>
-              <button
-                type="button"
-                className="px-2 py-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
-                onClick={() => deleteSelected()}
-              >
-                {t('guide.delete')}
-              </button>
-            </div>
+          {showGuides && overlay && selectedNode && selectedNode.id !== page?.root.id ? (
+            <SelectionToolbar node={selectedNode} rect={overlay} frameWidth={width} rtl={rtl} />
           ) : null}
           {dropBox ? (
             <div
@@ -451,6 +445,7 @@ export function Canvas() {
         </div>
         )}
       </div>
+      {menu ? <ContextMenu menu={menu} onClose={closeMenu} /> : null}
     </div>
   )
 }

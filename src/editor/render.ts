@@ -188,6 +188,20 @@ const EDITOR_SCRIPT = `<script>
     var id = el ? el.getAttribute('data-qid') : null;
     window.parent.postMessage({ source: 'qitma-canvas', type: 'select', id: id }, '*');
   }, true);
+  document.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    var target = event.target;
+    var el = target && target.closest ? target.closest('[data-qid]') : null;
+    var id = el ? el.getAttribute('data-qid') : null;
+    window.parent.postMessage({
+      source: 'qitma-canvas',
+      type: 'contextmenu',
+      id: id,
+      x: event.clientX,
+      y: event.clientY
+    }, '*');
+  }, true);
   var lastHover;
   document.addEventListener('mousemove', function (event) {
     var target = event.target;

@@ -277,6 +277,51 @@ export function duplicateNodeInProject(
   return { project: patchActivePage(project, result.root, page.id), node: result.node }
 }
 
+export function wrapNode(
+  root: Node,
+  id: string,
+  type: NodeType,
+): { root: Node; wrapper: Node } | null {
+  if (root.id === id) return null
+  const source = findNode(root, id)
+  if (!source || !isContainerType(type)) return null
+
+  const wrapper = createNode(type)
+  wrapper.children = [source]
+  let wrapped = false
+
+  const walk = (node: Node): Node => {
+    if (node.id === id && !wrapped) {
+      wrapped = true
+      return wrapper
+    }
+    let changed = false
+    const children = node.children.map((item) => {
+      const next = walk(item)
+      if (next !== item) changed = true
+      return next
+    })
+    return changed ? { ...node, children } : node
+  }
+
+  const next = walk(root)
+  if (!wrapped) return null
+  return { root: next, wrapper }
+}
+
+export function wrapNodeInProject(
+  project: Project,
+  nodeId: string,
+  type: NodeType,
+  pageId?: string | null,
+): { project: Project; wrapper: Node } | null {
+  const page = resolvePage(project, pageId)
+  if (!page) return null
+  const result = wrapNode(page.root, nodeId, type)
+  if (!result) return null
+  return { project: patchActivePage(project, result.root, page.id), wrapper: result.wrapper }
+}
+
 export function removeNode(root: Node, id: string): { root: Node; node: Node } | null {
   if (root.id === id) return null
   const node = findNode(root, id)

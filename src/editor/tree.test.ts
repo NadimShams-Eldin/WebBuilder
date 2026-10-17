@@ -16,6 +16,7 @@ import {
   cloneNode,
   duplicateNode,
   duplicateNodeInProject,
+  wrapNode,
   removeNode,
   removeNodeInProject,
   resolveInsertTarget,
@@ -113,6 +114,37 @@ describe('getPathNodes', () => {
     )
     assert.deepEqual(getPathNodes(root, 'r').map((node) => node.id), ['r'])
     assert.deepEqual(getPathNodes(root, 'missing'), [])
+  })
+})
+
+describe('wrapNode', () => {
+  it('wraps a nested node in a new container at the same position', () => {
+    const first = createNode('heading', 'a')
+    const second = createNode('text', 'b')
+    const root = createNode('container', 'r')
+    root.children = [first, second]
+    const result = wrapNode(root, 'b', 'flex')
+    assert.ok(result)
+    assert.equal(result.root.children.length, 2)
+    assert.equal(result.root.children[1].id, result.wrapper.id)
+    assert.equal(result.wrapper.type, 'flex')
+    assert.deepEqual(
+      result.wrapper.children.map((child) => child.id),
+      ['b'],
+    )
+  })
+
+  it('rejects wrapping the root or a missing node', () => {
+    const root = createNode('container', 'r')
+    assert.equal(wrapNode(root, 'r', 'flex'), null)
+    assert.equal(wrapNode(root, 'missing', 'flex'), null)
+  })
+
+  it('rejects non-container wrappers', () => {
+    const text = createNode('text', 't')
+    const root = createNode('container', 'r')
+    root.children = [text]
+    assert.equal(wrapNode(root, 't', 'heading'), null)
   })
 })
 

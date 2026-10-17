@@ -9,10 +9,12 @@ import { PanelCollapseStrip, PanelResizer } from './components/PanelResizer'
 import { RightPanel } from './components/RightPanel'
 import { StatusBar } from './components/StatusBar'
 import { Toolbar } from './components/Toolbar'
+import { useEditorShortcuts } from './components/useEditorShortcuts'
 import { localeDir } from './editor/chromePrefs.ts'
 import { useEditorStore } from './editor/store.ts'
 
 export default function App() {
+  useEditorShortcuts()
   const theme = useEditorStore((s) => s.theme)
   const locale = useEditorStore((s) => s.locale)
   const workspace = useEditorStore((s) => s.workspace)

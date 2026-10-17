@@ -53,10 +53,11 @@ import {
   duplicateNodeInProject,
   removeNodeInProject,
   updateNodeInProject,
+  wrapNodeInProject,
   type DropIntent,
   type NodePatch,
 } from './tree.ts'
-import type { Asset, NodeType, Page, Project } from './types.ts'
+import type { Asset, NodeStyle, NodeType, Page, Project } from './types.ts'
 import {
   clampZoom,
   DEVICE_WIDTHS,
@@ -115,6 +116,12 @@ export type EditorState = {
   deleteSelected: () => boolean
   duplicateNodes: (ids: string[]) => boolean
   deleteNodes: (ids: string[]) => boolean
+  wrapSelected: (type: NodeType) => boolean
+  styleClipboard: NodeStyle | null
+  copySelectedStyle: () => boolean
+  pasteStyleToSelected: () => boolean
+  selectParentOfSelected: () => boolean
+  selectFirstChildOfSelected: () => boolean
   clearPage: () => boolean
   addPage: (name?: string) => boolean
   removePage: (pageId?: string) => boolean
@@ -394,6 +401,54 @@ export const useEditorStore = create<EditorState>((set, get) => {
     deleteSelected: () => {
       const { selectedId } = get()
       return selectedId ? get().deleteNodes([selectedId]) : false
+    },
+    wrapSelected: (type) => {
+      const { project, selectedId, activePageId } = get()
+      if (!selectedId) return false
+      const result = wrapNodeInProject(project, selectedId, type, activePageId)
+      if (!result) return false
+      commit({
+        project: result.project,
+        selectedId: result.wrapper.id,
+        lastInsertError: null,
+        dropPreview: null,
+      })
+      return true
+    },
+    styleClipboard: null,
+    copySelectedStyle: () => {
+      const { project, selectedId, activePageId } = get()
+      const page = resolvePage(project, activePageId)
+      const node = page && selectedId ? findNode(page.root, selectedId) : null
+      if (!node) return false
+      set({ styleClipboard: { ...node.style } })
+      return true
+    },
+    pasteStyleToSelected: () => {
+      const { styleClipboard, selectedId } = get()
+      if (!styleClipboard || !selectedId) return false
+      get().updateNodeById(selectedId, { style: { ...styleClipboard } })
+      return true
+    },
+    selectParentOfSelected: () => {
+      const { project, activePageId, selectedId } = get()
+      if (!selectedId) return false
+      const page = resolvePage(project, activePageId)
+      if (!page || page.root.id === selectedId) return false
+      const parent = findParent(page.root, selectedId)
+      if (!parent) return false
+      set({ selectedId: parent.id, lastInsertError: null, dropPreview: null })
+      return true
+    },
+    selectFirstChildOfSelected: () => {
+      const { project, activePageId, selectedId } = get()
+      if (!selectedId) return false
+      const page = resolvePage(project, activePageId)
+      const node = page ? findNode(page.root, selectedId) : null
+      const child = node?.children[0]
+      if (!child) return false
+      set({ selectedId: child.id, lastInsertError: null, dropPreview: null })
+      return true
     },
     clearPage: () => {
       const { project, activePageId } = get()

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   ANIMATION_EASINGS,
   ANIMATION_EFFECTS,
@@ -18,8 +17,6 @@ import { useI18n } from '../editor/useI18n.ts'
 import { FieldControl } from './FieldControl'
 import { StyleInspector } from './StyleInspector'
 import { CONTENT_FIELDS } from './propertyFields.ts'
-
-type PanelTab = 'content' | 'style' | 'animation'
 
 function propToInput(node: Node, key: string): string {
   const value = node.props[key as keyof NodeProps]
@@ -283,7 +280,8 @@ export function LeftPanel() {
   const selectedId = useEditorStore((s) => s.selectedId)
   const updateSelected = useEditorStore((s) => s.updateSelected)
   const width = useEditorStore((s) => s.panelWidths.left)
-  const [tab, setTab] = useState<PanelTab>('content')
+  const tab = useEditorStore((s) => s.leftTab)
+  const setTab = useEditorStore((s) => s.setLeftTab)
   const page = useEditorStore(selectActivePage)
   const node = page && selectedId ? findNode(page.root, selectedId) : null
   const tabClass = (active: boolean) =>
