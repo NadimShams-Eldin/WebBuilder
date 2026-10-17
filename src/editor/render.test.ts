@@ -236,6 +236,7 @@ describe('renderPageHtml', () => {
     assert.ok(html.includes('qitma-canvas'))
     assert.ok(html.includes("'select'"))
     assert.ok(html.includes("'hover'"))
+    assert.ok(html.includes("'modifier'"))
     assert.ok(html.includes('lastHover'))
     assert.equal(exported.includes("'hover'"), false)
     assert.equal(exported.includes('qitma-canvas'), false)

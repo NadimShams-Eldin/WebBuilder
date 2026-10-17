@@ -4,12 +4,15 @@ import {
   collectEmptyContainerIds,
   floatingMenuPosition,
   gridOverlayLines,
+  measureSegments,
 } from '../editor/canvasGuides.ts'
 import { registerCanvasIframe } from '../editor/dnd.ts'
 import { indicatorBox, type IndicatorBox } from '../editor/drop.ts'
 import { renderPageHtml } from '../editor/render.ts'
 import { DEVICE_WIDTHS, getActivePage, useEditorStore } from '../editor/store.ts'
+import { findNode } from '../editor/tree.ts'
 import { useI18n } from '../editor/useI18n.ts'
+import { CanvasGuides } from './CanvasGuides'
 
 type OverlayRect = { top: number; left: number; width: number; height: number }
 
@@ -20,6 +23,7 @@ type CanvasMessage = {
   type?: string
   id?: string | null
   pageId?: string | null
+  alt?: boolean
 }
 
 function queryNodeRect(doc: Document, id: string): OverlayRect | null {
@@ -68,6 +72,7 @@ export function Canvas() {
   const setRightTab = useEditorStore((s) => s.setRightTab)
   const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
   const deleteSelected = useEditorStore((s) => s.deleteSelected)
+  const updateNodeById = useEditorStore((s) => s.updateNodeById)
   const workspace = useEditorStore((s) => s.workspace)
   const gridOverlay = useEditorStore((s) => s.gridOverlay)
   const preview = workspace === 'preview'
@@ -82,8 +87,11 @@ export function Canvas() {
   const [gridLines, setGridLines] = useState<GridLines | null>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
   const [dropBox, setDropBox] = useState<IndicatorBox | null>(null)
+  const [altDown, setAltDown] = useState(false)
+  const [frameEl, setFrameEl] = useState<HTMLIFrameElement | null>(null)
 
   const page = getActivePage(project, activePageId)
+  const selectedNode = page && selectedId ? findNode(page.root, selectedId) : null
   const srcDoc = useMemo(
     () => (page ? renderPageHtml(project, page.root, preview ? 'preview' : 'editor', page) : ''),
     [project, page, preview],
@@ -158,7 +166,9 @@ export function Canvas() {
   }, [dropPreview, preview])
 
   useEffect(() => {
-    registerCanvasIframe(iframeRef.current)
+    const frame = iframeRef.current
+    setFrameEl(frame)
+    registerCanvasIframe(frame)
     return () => registerCanvasIframe(null)
   }, [])
 
@@ -195,6 +205,19 @@ export function Canvas() {
   }, [syncDrop, zoom, device])
 
   useEffect(() => {
+    const onKey = (event: KeyboardEvent) => setAltDown(event.altKey)
+    const onBlur = () => setAltDown(false)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('keyup', onKey)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keyup', onKey)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
+
+  useEffect(() => {
     const onMessage = (event: MessageEvent<CanvasMessage>) => {
       if (event.data?.source !== 'qitma-canvas') return
       if (event.data.type === 'navigate' && event.data.pageId) {
@@ -202,6 +225,10 @@ export function Canvas() {
         return
       }
       if (preview) return
+      if (event.data.type === 'modifier') {
+        setAltDown(Boolean(event.data.alt))
+        return
+      }
       if (event.data.type === 'hover') {
         setHoveredId(event.data.id ?? null)
         return
@@ -216,6 +243,11 @@ export function Canvas() {
 
   const showGuides = !preview && !dropBox
   const showGridLines = showGuides && gridOverlay
+  const measureTarget =
+    showGridLines && altDown && hoverRect && selectedId && hoveredId !== selectedId
+      ? hoverRect
+      : null
+  const measures = overlay && measureTarget ? measureSegments(overlay, measureTarget) : []
 
   return (
     <div
@@ -300,6 +332,84 @@ export function Canvas() {
                   style={{ top, left: overlay.left, width: overlay.width }}
                 />
               ))
+            : null}
+          {showGridLines ? (
+            <>
+              <div
+                className="pointer-events-none absolute top-0 h-3 w-full border-b border-neutral-300/60 bg-white/70 dark:border-neutral-600/60 dark:bg-neutral-900/70"
+                data-guide="ruler-h"
+                title={t('guides.measure')}
+                style={{
+                  backgroundImage:
+                    'repeating-linear-gradient(to right, rgba(120,120,120,0.55) 0 1px, transparent 1px 50px)',
+                }}
+              />
+              <div
+                className="pointer-events-none absolute h-full w-3 border-e border-neutral-300/60 bg-white/70 dark:border-neutral-600/60 dark:bg-neutral-900/70"
+                data-guide="ruler-v"
+                style={{
+                  top: 0,
+                  ...(rtl ? { right: 0 } : { left: 0 }),
+                  backgroundImage:
+                    'repeating-linear-gradient(to bottom, rgba(120,120,120,0.55) 0 1px, transparent 1px 50px)',
+                }}
+              />
+            </>
+          ) : null}
+          {showGridLines && overlay && selectedNode ? (
+            <CanvasGuides
+              frame={frameEl}
+              node={selectedNode}
+              rect={overlay}
+              zoom={zoom}
+              rtl={rtl}
+              onCommit={(style) => updateNodeById(selectedNode.id, { style })}
+            />
+          ) : null}
+          {measureTarget
+            ? measures.map((segment, index) =>
+                segment.axis === 'horizontal' ? (
+                  <div key={`mh-${index}`} className="pointer-events-none absolute">
+                    <div
+                      className="absolute h-px bg-emerald-500"
+                      style={{
+                        top: segment.at,
+                        left: Math.min(segment.start, segment.end),
+                        width: segment.length,
+                      }}
+                    />
+                    <span
+                      className="absolute -translate-x-1/2 -translate-y-1/2 rounded bg-emerald-600 px-1 text-[10px] text-white"
+                      style={{
+                        top: segment.at,
+                        left: (segment.start + segment.end) / 2,
+                      }}
+                    >
+                      {Math.round(segment.length)}px
+                    </span>
+                  </div>
+                ) : (
+                  <div key={`mv-${index}`} className="pointer-events-none absolute">
+                    <div
+                      className="absolute w-px bg-emerald-500"
+                      style={{
+                        left: segment.at,
+                        top: Math.min(segment.start, segment.end),
+                        height: segment.length,
+                      }}
+                    />
+                    <span
+                      className="absolute -translate-x-1/2 -translate-y-1/2 rounded bg-emerald-600 px-1 text-[10px] text-white"
+                      style={{
+                        left: segment.at,
+                        top: (segment.start + segment.end) / 2,
+                      }}
+                    >
+                      {Math.round(segment.length)}px
+                    </span>
+                  </div>
+                ),
+              )
             : null}
           {showGuides && menuPos && canMutateSelected ? (
             <div

@@ -203,6 +203,12 @@ const EDITOR_SCRIPT = `<script>
     window.parent.postMessage({ source: 'qitma-canvas', type: 'hover', id: null }, '*');
   }, true);
   document.addEventListener('submit', function (event) { event.preventDefault(); }, true);
+  function postAlt(active) {
+    window.parent.postMessage({ source: 'qitma-canvas', type: 'modifier', alt: active }, '*');
+  }
+  document.addEventListener('keydown', function (event) { postAlt(event.altKey); }, true);
+  document.addEventListener('keyup', function (event) { postAlt(event.altKey); }, true);
+  window.addEventListener('blur', function () { postAlt(false); });
 })();
 </script>`
 
