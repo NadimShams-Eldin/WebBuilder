@@ -46,7 +46,7 @@ export function RightPanel() {
   return (
     <aside
       style={{ width }}
-      className="flex h-full shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+      className="q-panel flex h-full shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
     >
       <div className="flex items-center gap-1 border-b border-neutral-200 p-2 text-sm dark:border-neutral-800">
         <button type="button" onClick={() => setTab('blocks')} className={tabClass('blocks')}>

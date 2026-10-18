@@ -53,6 +53,14 @@ export function MenuBar() {
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
   const setShortcutsOpen = useEditorStore((s) => s.setShortcutsOpen)
   const demoMode = useEditorStore((s) => s.demoMode)
+  const density = useEditorStore((s) => s.density)
+  const panelFontScale = useEditorStore((s) => s.panelFontScale)
+  const activeWorkspaceId = useEditorStore((s) => s.activeWorkspaceId)
+  const workspacePresets = useEditorStore((s) => s.workspacePresets)
+  const applyWorkspace = useEditorStore((s) => s.applyWorkspace)
+  const saveCustomWorkspace = useEditorStore((s) => s.saveCustomWorkspace)
+  const setDensity = useEditorStore((s) => s.setDensity)
+  const setPanelFontScale = useEditorStore((s) => s.setPanelFontScale)
   const io = useProjectIO()
 
   const preview = workspace === 'preview'
@@ -187,6 +195,44 @@ export function MenuBar() {
           label: t('menu.toggleLocale'),
           onSelect: () => setLocale(locale === 'ar' ? 'en' : 'ar'),
         },
+        { kind: 'separator' },
+        ...workspacePresets().map(
+          (preset): MenuItem => ({
+            kind: 'action',
+            label: t(preset.nameKey),
+            onSelect: () => applyWorkspace(preset.id),
+            checked: activeWorkspaceId === preset.id,
+          }),
+        ),
+        { kind: 'action', label: t('menu.saveWorkspace'), onSelect: saveCustomWorkspace },
+        { kind: 'separator' },
+        {
+          kind: 'action',
+          label: `${t('menu.density')}: ${t('density.comfortable')}`,
+          onSelect: () => setDensity('comfortable'),
+          checked: density === 'comfortable',
+        },
+        {
+          kind: 'action',
+          label: `${t('menu.density')}: ${t('density.compact')}`,
+          onSelect: () => setDensity('compact'),
+          checked: density === 'compact',
+        },
+        { kind: 'separator' },
+        ...(
+          [
+            ['small', 0.9],
+            ['medium', 1],
+            ['large', 1.1],
+          ] as const
+        ).map(
+          ([key, scale]): MenuItem => ({
+            kind: 'action',
+            label: `${t('menu.fontScale')}: ${t(`fontScale.${key}`)}`,
+            onSelect: () => setPanelFontScale(scale),
+            checked: panelFontScale === scale,
+          }),
+        ),
         { kind: 'action', label: t('menu.resetLayout'), onSelect: resetLayout },
       ],
     },

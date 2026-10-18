@@ -62,6 +62,8 @@ describe('layout prefs', () => {
       gridOverlay: true,
       leftTab: 'style',
       rightTab: 'outline',
+      density: 'compact',
+      panelFontScale: 0.9,
     }
     saveLayoutPrefs(layout, storage)
     assert.equal(storage.getItem(LAYOUT_STORAGE_KEY), serializeLayoutPrefs(layout))

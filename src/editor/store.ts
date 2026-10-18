@@ -9,11 +9,13 @@ import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './as
 import { createDemoProject } from './demoProject.ts'
 import { isDemoRequest } from './demoMode.ts'
 import {
+  clampPanelFontScale,
   clampPanelWidth,
   cloneLayout,
   DEFAULT_LAYOUT,
   loadLayoutPrefs,
   saveLayoutPrefs,
+  type Density,
   type EditorLayout,
   type EditorPanels,
   type LeftTab,
@@ -21,6 +23,15 @@ import {
   type PanelWidths,
   type RightTab,
 } from './layoutPrefs.ts'
+import {
+  CUSTOM_WORKSPACE_ID,
+  findWorkspace,
+  loadWorkspacesPrefs,
+  matchingWorkspaceId,
+  saveWorkspacesPrefs,
+  workspaceList,
+  type WorkspacePreset,
+} from './workspaces.ts'
 import { loadPersistedSession, savePersistedSession } from './persist.ts'
 import { parseProjectJson, serializeProject } from './projectJson.ts'
 import {
@@ -90,6 +101,10 @@ export type EditorState = {
   panels: EditorPanels
   panelWidths: PanelWidths
   gridOverlay: boolean
+  density: Density
+  panelFontScale: number
+  activeWorkspaceId: string
+  hasCustomWorkspace: boolean
   dropPreview: DropIntent | null
   history: HistoryState
   theme: EditorTheme
@@ -110,6 +125,11 @@ export type EditorState = {
   setGridOverlay: (on: boolean) => void
   toggleGridOverlay: () => void
   resetLayout: () => void
+  setDensity: (density: Density) => void
+  setPanelFontScale: (scale: number) => void
+  applyWorkspace: (id: string) => boolean
+  saveCustomWorkspace: () => void
+  workspacePresets: () => WorkspacePreset[]
   setDropPreview: (preview: DropIntent | null) => void
   setTheme: (theme: EditorTheme) => void
   setLocale: (locale: Locale) => void
@@ -169,6 +189,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
   const initialViewport = loadViewportPrefs()
   const initialChrome = loadChromePrefs()
   const initialLayout = loadLayoutPrefs()
+  const initialWorkspaces = loadWorkspacesPrefs()
+  let customWorkspace = initialWorkspaces.custom
+  const activeWorkspaceId =
+    matchingWorkspaceId(initialLayout, initialWorkspaces.custom) ?? initialWorkspaces.activeId
   const persistChrome = (theme: EditorTheme, locale: Locale) => {
     saveChromePrefs({ theme, locale })
   }
@@ -178,9 +202,16 @@ export const useEditorStore = create<EditorState>((set, get) => {
     gridOverlay: state.gridOverlay,
     leftTab: state.leftTab,
     rightTab: state.rightTab,
+    density: state.density,
+    panelFontScale: state.panelFontScale,
   })
   const persistLayout = (state: EditorState) => {
-    saveLayoutPrefs(layoutOf(state))
+    const layout = layoutOf(state)
+    saveLayoutPrefs(layout)
+    const match = workspaceList(customWorkspace).find(
+      (item) => JSON.stringify(item.layout) === JSON.stringify(layout),
+    )
+    if (match && match.id !== state.activeWorkspaceId) set({ activeWorkspaceId: match.id })
   }
   const demoMode = isDemoRequest(
     typeof window === 'undefined' ? '' : window.location.search,
@@ -208,6 +239,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
     panels: initialLayout.panels,
     panelWidths: initialLayout.widths,
     gridOverlay: initialLayout.gridOverlay,
+    density: initialLayout.density,
+    panelFontScale: initialLayout.panelFontScale,
+    activeWorkspaceId,
+    hasCustomWorkspace: customWorkspace !== null,
     dropPreview: null,
     history: emptyHistory(),
     theme: initialChrome.theme,
@@ -289,9 +324,47 @@ export const useEditorStore = create<EditorState>((set, get) => {
         gridOverlay: layout.gridOverlay,
         leftTab: layout.leftTab,
         rightTab: layout.rightTab,
+        density: layout.density,
+        panelFontScale: layout.panelFontScale,
+        activeWorkspaceId: matchingWorkspaceId(layout, customWorkspace) ?? 'design',
       })
       persistLayout(get())
     },
+    setDensity: (density) => {
+      set({ density })
+      persistLayout(get())
+    },
+    setPanelFontScale: (scale) => {
+      set({ panelFontScale: clampPanelFontScale(scale) })
+      persistLayout(get())
+    },
+    applyWorkspace: (id) => {
+      const preset = findWorkspace(id, customWorkspace)
+      if (!preset) return false
+      const layout = cloneLayout(preset.layout)
+      set({
+        panels: layout.panels,
+        panelWidths: layout.widths,
+        gridOverlay: layout.gridOverlay,
+        leftTab: layout.leftTab,
+        rightTab: layout.rightTab,
+        density: layout.density,
+        panelFontScale: layout.panelFontScale,
+        activeWorkspaceId: preset.id,
+      })
+      persistLayout(get())
+      saveWorkspacesPrefs({ activeId: preset.id, custom: customWorkspace })
+      return true
+    },
+    saveCustomWorkspace: () => {
+      customWorkspace = cloneLayout(layoutOf(get()))
+      set({
+        hasCustomWorkspace: true,
+        activeWorkspaceId: CUSTOM_WORKSPACE_ID,
+      })
+      saveWorkspacesPrefs({ activeId: CUSTOM_WORKSPACE_ID, custom: customWorkspace })
+    },
+    workspacePresets: () => workspaceList(customWorkspace),
     setDropPreview: (dropPreview) => set({ dropPreview }),
     setTheme: (theme) => {
       persistChrome(theme, get().locale)

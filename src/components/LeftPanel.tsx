@@ -292,7 +292,7 @@ export function LeftPanel() {
   return (
     <aside
       style={{ width }}
-      className="flex h-full shrink-0 flex-col border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+      className="q-panel flex h-full shrink-0 flex-col border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
     >
       <div className="border-b border-neutral-200 p-3 dark:border-neutral-800">
         <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{t('panel.props')}</p>

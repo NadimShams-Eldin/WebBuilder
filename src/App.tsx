@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { Breadcrumb } from './components/Breadcrumb'
 import { CanvasArea } from './components/CanvasArea'
 import { CommandPalette } from './components/CommandPalette'
@@ -21,6 +21,8 @@ export default function App() {
   const locale = useEditorStore((s) => s.locale)
   const workspace = useEditorStore((s) => s.workspace)
   const panels = useEditorStore((s) => s.panels)
+  const density = useEditorStore((s) => s.density)
+  const panelFontScale = useEditorStore((s) => s.panelFontScale)
   const preview = workspace === 'preview'
   const dir = localeDir(locale)
 
@@ -35,6 +37,8 @@ export default function App() {
     <EditorDnd>
       <div
         dir={dir}
+        data-density={density}
+        style={{ '--q-panel-font-scale': panelFontScale } as CSSProperties}
         className="flex h-screen flex-col bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
       >
         <MenuBar />

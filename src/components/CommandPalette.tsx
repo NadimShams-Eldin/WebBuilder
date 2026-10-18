@@ -32,6 +32,10 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
   const setZoom = useEditorStore((s) => s.setZoom)
   const locale = useEditorStore((s) => s.locale)
+  const applyWorkspace = useEditorStore((s) => s.applyWorkspace)
+  const saveCustomWorkspace = useEditorStore((s) => s.saveCustomWorkspace)
+  const workspacePresets = useEditorStore((s) => s.workspacePresets)
+  const setDensity = useEditorStore((s) => s.setDensity)
 
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -118,10 +122,59 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
       },
     ]
 
-    return [...insertCommands, ...viewCommands, ...pageCommands, ...projectCommands].map(
-      (command) => ({ ...command, run: () => (command.run(), onClose()) }),
-    )
-  }, [addBlock, addPage, io, onClose, setZoom, setWorkspace, t, toggleGridOverlay, togglePanel])
+    const workspaceCommands: Command[] = [
+      ...workspacePresets().map((preset) => ({
+        id: `workspace:${preset.id}`,
+        label: t(preset.nameKey),
+        group: t('palette.group.workspace'),
+        keywords: ['workspace', 'layout', 'مساحة'],
+        run: () => applyWorkspace(preset.id),
+      })),
+      {
+        id: 'workspace:save',
+        label: t('menu.saveWorkspace'),
+        group: t('palette.group.workspace'),
+        keywords: ['workspace', 'save', 'layout', 'حفظ'],
+        run: () => saveCustomWorkspace(),
+      },
+      {
+        id: 'workspace:density-compact',
+        label: `${t('menu.density')}: ${t('density.compact')}`,
+        group: t('palette.group.workspace'),
+        keywords: ['density', 'compact', 'كثافة'],
+        run: () => setDensity('compact'),
+      },
+      {
+        id: 'workspace:density-comfortable',
+        label: `${t('menu.density')}: ${t('density.comfortable')}`,
+        group: t('palette.group.workspace'),
+        keywords: ['density', 'comfortable', 'كثافة'],
+        run: () => setDensity('comfortable'),
+      },
+    ]
+
+    return [
+      ...insertCommands,
+      ...viewCommands,
+      ...pageCommands,
+      ...projectCommands,
+      ...workspaceCommands,
+    ].map((command) => ({ ...command, run: () => (command.run(), onClose()) }))
+  }, [
+    addBlock,
+    addPage,
+    applyWorkspace,
+    io,
+    onClose,
+    saveCustomWorkspace,
+    setDensity,
+    setZoom,
+    setWorkspace,
+    t,
+    toggleGridOverlay,
+    togglePanel,
+    workspacePresets,
+  ])
 
   const visible = useMemo(() => filterCommands(commands, query), [commands, query])
 

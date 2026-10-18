@@ -10,6 +10,9 @@ export function StatusBar() {
   const zoom = useEditorStore((s) => s.zoom)
   const page = useEditorStore(selectActivePage)
   const node = page && selectedId ? findNode(page.root, selectedId) : null
+  const activeWorkspaceId = useEditorStore((s) => s.activeWorkspaceId)
+  const workspaceNameKey =
+    activeWorkspaceId === 'custom' ? 'workspace.custom' : `workspace.${activeWorkspaceId}`
 
   return (
     <div className="flex items-center gap-3 border-t border-neutral-200 bg-white px-3 py-1 text-[11px] text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
@@ -19,6 +22,9 @@ export function StatusBar() {
         {t('status.selected')}: {node ? `${node.name} · ${t(`block.${node.type}`)}` : t('status.noSelection')}
       </span>
       <div className="ms-auto flex items-center gap-3">
+        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+          {t(workspaceNameKey)}
+        </span>
         <span>
           {t('status.page')}: {page?.name ?? '—'}
         </span>
