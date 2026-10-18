@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createProject } from '../editor/createProject.ts'
+import { withoutDemoHref } from '../editor/demoMode.ts'
 import { selectCanRedo, selectCanUndo, useEditorStore } from '../editor/store.ts'
 import { useI18n } from '../editor/useI18n.ts'
 import { useProjectIO } from './useProjectIO.ts'
@@ -50,6 +51,8 @@ export function MenuBar() {
   const resetLayout = useEditorStore((s) => s.resetLayout)
   const workspace = useEditorStore((s) => s.workspace)
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
+  const setShortcutsOpen = useEditorStore((s) => s.setShortcutsOpen)
+  const demoMode = useEditorStore((s) => s.demoMode)
   const io = useProjectIO()
 
   const preview = workspace === 'preview'
@@ -80,6 +83,16 @@ export function MenuBar() {
       items: [
         { kind: 'action', label: t('menu.new'), onSelect: () => setProject(createProject()) },
         { kind: 'action', label: t('tools.demo'), onSelect: loadDemo },
+        {
+          kind: 'action',
+          label: t('tools.demoDownload'),
+          onSelect: () => {
+            const link = document.createElement('a')
+            link.href = 'demo/qitma-demo.json'
+            link.download = 'qitma-demo.json'
+            link.click()
+          },
+        },
         { kind: 'separator' },
         { kind: 'action', label: t('project.import'), onSelect: io.importProject },
         { kind: 'action', label: t('project.export'), onSelect: io.exportProject },
@@ -180,7 +193,10 @@ export function MenuBar() {
     {
       id: 'help',
       label: t('menu.help'),
-      items: [{ kind: 'action', label: t('menu.about'), onSelect: () => setAboutOpen(true) }],
+      items: [
+        { kind: 'action', label: t('menu.shortcuts'), onSelect: () => setShortcutsOpen(true) },
+        { kind: 'action', label: t('menu.about'), onSelect: () => setAboutOpen(true) },
+      ],
     },
   ]
 
@@ -193,6 +209,22 @@ export function MenuBar() {
       <span className="me-2 text-xs font-semibold text-neutral-700 dark:text-neutral-200">
         {t('app.name')}
       </span>
+      {demoMode ? (
+        <span className="me-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+          {t('demo.badge')}
+          <button
+            type="button"
+            title={t('demo.exitHint')}
+            className="rounded-full px-1.5 py-0.5 text-[10px] text-blue-700 underline underline-offset-2 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900"
+            onClick={() => {
+              const url = withoutDemoHref(window.location.href)
+              window.location.replace(url)
+            }}
+          >
+            {t('demo.exit')}
+          </button>
+        </span>
+      ) : null}
 
       {menus.map((menu) => (
         <div key={menu.id} className="relative">

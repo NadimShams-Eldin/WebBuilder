@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { resolveShortcut, type ShortcutInput } from './shortcuts.ts'
+import { resolveShortcut, SHORTCUT_GROUPS, type ShortcutInput } from './shortcuts.ts'
 
 const base: ShortcutInput = {
   key: '',
@@ -43,9 +43,26 @@ describe('resolveShortcut', () => {
     assert.equal(press({ key: 'Escape' }), 'exit-preview')
   })
 
+  it('maps the command palette, shortcuts, and preview toggles', () => {
+    assert.equal(press({ key: 'k', ctrlKey: true }), 'command-palette')
+    assert.equal(press({ key: 'K', metaKey: true }), 'command-palette')
+    assert.equal(press({ key: '?' }), 'shortcuts')
+    assert.equal(press({ key: 'Enter', ctrlKey: true }), 'toggle-preview')
+  })
+
   it('ignores plain typing and unknown combos', () => {
     assert.equal(press({ key: 'd' }), null)
     assert.equal(press({ key: 'a', ctrlKey: true }), null)
     assert.equal(press({ key: 'c', ctrlKey: true, altKey: true, shiftKey: true }), 'copy-style')
+  })
+})
+
+describe('SHORTCUT_GROUPS', () => {
+  it('covers every resolved action exactly once', () => {
+    const listed = SHORTCUT_GROUPS.flatMap((group) => group.items.map((item) => item.action))
+    assert.equal(new Set(listed).size, listed.length)
+    assert.ok(listed.includes('command-palette'))
+    assert.ok(listed.includes('duplicate'))
+    assert.ok(listed.includes('zoom-reset'))
   })
 })

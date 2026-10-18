@@ -7,6 +7,7 @@ import {
 } from './chromePrefs.ts'
 import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './assets.ts'
 import { createDemoProject } from './demoProject.ts'
+import { isDemoRequest } from './demoMode.ts'
 import {
   clampPanelWidth,
   cloneLayout,
@@ -77,6 +78,9 @@ export type EditorState = {
   project: Project
   selectedId: string | null
   activePageId: string | null
+  paletteOpen: boolean
+  shortcutsOpen: boolean
+  demoMode: boolean
   device: Device
   zoom: number
   lastInsertError: string | null
@@ -93,6 +97,8 @@ export type EditorState = {
   setProject: (project: Project) => void
   setSelectedId: (id: string | null) => void
   setActivePage: (pageId: string) => void
+  setPaletteOpen: (open: boolean) => void
+  setShortcutsOpen: (open: boolean) => void
   setDevice: (device: Device) => void
   setZoom: (zoom: number) => void
   setWorkspace: (mode: WorkspaceMode) => void
@@ -157,7 +163,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
       : pushHistory(state.history, snapshotOf(state.project, state.selectedId, state.activePageId))
     coalesce = coalesceId ? { kind: 'update', id: coalesceId, at: now } : null
     set({ ...patch, selectedId, activePageId, history })
-    savePersistedSession({ project: patch.project, activePageId })
+    persistProject({ project: patch.project, activePageId })
   }
 
   const initialViewport = loadViewportPrefs()
@@ -176,13 +182,23 @@ export const useEditorStore = create<EditorState>((set, get) => {
   const persistLayout = (state: EditorState) => {
     saveLayoutPrefs(layoutOf(state))
   }
-  const persisted = loadPersistedSession()
+  const demoMode = isDemoRequest(
+    typeof window === 'undefined' ? '' : window.location.search,
+  )
+  const persisted = demoMode ? null : loadPersistedSession()
   const initialProject = persisted?.project ?? createDemoProject()
+  const persistProject = (session: { project: Project; activePageId: string | null }) => {
+    if (demoMode) return
+    savePersistedSession(session)
+  }
 
   return {
     project: initialProject,
     selectedId: null,
     activePageId: persisted?.activePageId ?? initialProject.pages[0]?.id ?? null,
+    paletteOpen: false,
+    shortcutsOpen: false,
+    demoMode,
     device: initialViewport.device,
     zoom: initialViewport.zoom,
     lastInsertError: null,
@@ -208,13 +224,15 @@ export const useEditorStore = create<EditorState>((set, get) => {
       coalesce = null
       set({ selectedId, lastInsertError: null })
     },
+    setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+    setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
     setActivePage: (pageId) => {
       const state = get()
       const page = resolvePage(state.project, pageId)
       if (!page) return
       coalesce = null
       set({ activePageId: page.id, selectedId: null, lastInsertError: null, dropPreview: null })
-      savePersistedSession({ project: state.project, activePageId: page.id })
+      persistProject({ project: state.project, activePageId: page.id })
     },
     setDevice: (device) => {
       saveViewportPrefs({ device, zoom: get().zoom })
@@ -580,7 +598,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
         lastInsertError: null,
         dropPreview: null,
       })
-      savePersistedSession({
+      persistProject({
         project: result.snapshot.project,
         activePageId: result.snapshot.activePageId,
       })
@@ -602,7 +620,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
         lastInsertError: null,
         dropPreview: null,
       })
-      savePersistedSession({
+      persistProject({
         project: result.snapshot.project,
         activePageId: result.snapshot.activePageId,
       })

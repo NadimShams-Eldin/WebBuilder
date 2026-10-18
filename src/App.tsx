@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
 import { Breadcrumb } from './components/Breadcrumb'
 import { CanvasArea } from './components/CanvasArea'
+import { CommandPalette } from './components/CommandPalette'
 import { EditorDnd } from './components/EditorDnd'
 import { LeftPanel } from './components/LeftPanel'
 import { MenuBar } from './components/MenuBar'
 import { PageTabs } from './components/PageTabs'
 import { PanelCollapseStrip, PanelResizer } from './components/PanelResizer'
 import { RightPanel } from './components/RightPanel'
+import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { StatusBar } from './components/StatusBar'
 import { Toolbar } from './components/Toolbar'
 import { useEditorShortcuts } from './components/useEditorShortcuts'
@@ -61,6 +63,8 @@ export default function App() {
           )}
         </div>
         {preview ? null : <StatusBar />}
+        <CommandPalette />
+        <ShortcutsDialog />
       </div>
     </EditorDnd>
   )

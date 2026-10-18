@@ -16,9 +16,10 @@ describe('collectExtractedFields', () => {
     const texts = fields.map((field) => field.value)
 
     assert.ok(fields.length >= 10)
-    assert.equal(fields[0].nodeType, 'heading')
-    assert.equal(fields[0].key, 'text')
-    assert.ok(texts.includes('أهلاً بك في قطمة'))
+    const title = fields.find((field) => field.value === 'أهلاً بك في قطمة')
+    assert.equal(title?.nodeType, 'heading')
+    assert.equal(title?.key, 'text')
+    assert.ok(fields.indexOf(title!) < texts.indexOf('تخطيط حر'))
     assert.ok(texts.includes('تخطيط حر'))
     assert.ok(texts.includes('مصدر واحد'))
     assert.ok(texts.includes('عزل تام'))

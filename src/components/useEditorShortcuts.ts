@@ -18,8 +18,20 @@ export function useEditorShortcuts() {
       if (!action) return
       const state = useEditorStore.getState()
 
+      if (action === 'command-palette') {
+        event.preventDefault()
+        state.setPaletteOpen(!state.paletteOpen)
+        return
+      }
+      if (action === 'shortcuts') {
+        event.preventDefault()
+        state.setShortcutsOpen(true)
+        return
+      }
+      if (state.paletteOpen || state.shortcutsOpen) return
+
       if (state.workspace === 'preview') {
-        if (action !== 'exit-preview') return
+        if (action !== 'exit-preview' && action !== 'toggle-preview') return
         event.preventDefault()
         state.setWorkspace('compose')
         return
@@ -67,6 +79,10 @@ export function useEditorShortcuts() {
         case 'zoom-reset':
           event.preventDefault()
           state.setZoom(1)
+          break
+        case 'toggle-preview':
+          event.preventDefault()
+          state.setWorkspace('preview')
           break
         case 'exit-preview':
           return
