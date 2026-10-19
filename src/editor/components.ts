@@ -1,20 +1,10 @@
 import { createId } from './createNode.ts'
-import { findNode, insertChild, resolveInsertTarget, type NodePatch } from './tree.ts'
+import { cloneNode, findNode, insertChild, resolveInsertTarget, type NodePatch } from './tree.ts'
 import { resolvePage } from './pages.ts'
 import type { ComponentDef, Node, Project } from './types.ts'
 
 export function cloneTreeWithIds(node: Node): Node {
-  const props = { ...node.props }
-  if (Array.isArray(node.props.items)) props.items = [...node.props.items]
-  if (Array.isArray(node.props.options)) props.options = [...node.props.options]
-  return {
-    ...node,
-    id: createId(),
-    props,
-    style: { ...node.style },
-    animation: node.animation ? { ...node.animation } : null,
-    children: node.children.map(cloneTreeWithIds),
-  }
+  return cloneNode(node)
 }
 
 function stampDefinition(node: Node, componentId: string): Node {
@@ -26,20 +16,19 @@ function stampDefinition(node: Node, componentId: string): Node {
   }
 }
 
-function cloneInstance(node: Node, componentId: string): Node {
-  const props = { ...node.props }
-  if (Array.isArray(node.props.items)) props.items = [...node.props.items]
-  if (Array.isArray(node.props.options)) props.options = [...node.props.options]
+function stampInstance(cloned: Node, source: Node, componentId: string): Node {
   return {
-    ...node,
-    id: createId(),
-    originId: node.originId ?? node.id,
+    ...cloned,
+    originId: source.originId ?? source.id,
     componentId,
-    props,
-    style: { ...node.style },
-    animation: node.animation ? { ...node.animation } : null,
-    children: node.children.map((child) => cloneInstance(child, componentId)),
+    children: cloned.children.map((child, index) =>
+      stampInstance(child, source.children[index], componentId),
+    ),
   }
+}
+
+function cloneInstance(node: Node, componentId: string): Node {
+  return stampInstance(cloneNode(node), node, componentId)
 }
 
 function walkPages(project: Project, mapper: (node: Node) => Node): Project {

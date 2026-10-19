@@ -1,4 +1,4 @@
-export const LEFT_TABS = ['content', 'style', 'animation'] as const
+export const LEFT_TABS = ['content', 'style', 'animation', 'interactions'] as const
 export type LeftTab = (typeof LEFT_TABS)[number]
 
 export const RIGHT_TABS = ['blocks', 'outline', 'extracted', 'components'] as const

@@ -41,6 +41,8 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   const insertComponent = useEditorStore((s) => s.insertComponent)
   const createComponentFromSelected = useEditorStore((s) => s.createComponentFromSelected)
   const setRightTab = useEditorStore((s) => s.setRightTab)
+  const setLeftTab = useEditorStore((s) => s.setLeftTab)
+  const setPanelVisible = useEditorStore((s) => s.setPanelVisible)
 
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -91,6 +93,16 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         group: t('palette.group.view'),
         keywords: ['timeline', 'animation', 'motion', 'خط', 'حركة'],
         run: () => toggleTimeline(),
+      },
+      {
+        id: 'view:interactions',
+        label: t('command.openInteractions'),
+        group: t('palette.group.view'),
+        keywords: ['interactions', 'event', 'click', 'hover', 'تفاعل'],
+        run: () => {
+          setPanelVisible('left', true)
+          setLeftTab('interactions')
+        },
       },
       {
         id: 'view:zoom-reset',
@@ -205,6 +217,8 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     project.components,
     saveCustomWorkspace,
     setDensity,
+    setLeftTab,
+    setPanelVisible,
     setRightTab,
     setZoom,
     setWorkspace,

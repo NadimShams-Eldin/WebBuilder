@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { createDemoProject } from './demoProject.ts'
+import { collectProjectInteractions } from './interactions.ts'
 import { internalHref } from './pages.ts'
 import { renderCss, renderExportedPages, renderHtml } from './render.ts'
 
@@ -33,5 +34,15 @@ describe('demo project', () => {
     )
     assert.ok(files[0].html.includes('href="about.html"'))
     assert.ok(files[1].html.includes('href="index.html"'))
+  })
+
+  it('seeds a CTA click interaction that restarts the hero heading', () => {
+    const project = createDemoProject()
+    const items = collectProjectInteractions(project)
+    assert.ok(items.length >= 1)
+    assert.equal(items[0].interaction.event, 'click')
+    assert.equal(items[0].interaction.action, 'restart')
+    assert.ok(items[0].interaction.targetId)
+    assert.ok(renderHtml(project.pages[0].root).includes('data-qix='))
   })
 })

@@ -1,4 +1,5 @@
 import { ANIMATION_SCRIPT_BODY, hasScrollAnimation } from '../editor/animation.ts'
+import { hasProjectInteractions, INTERACTION_SCRIPT_BODY } from '../editor/interactions.ts'
 import { pageFileName } from '../editor/pages.ts'
 import { renderCss, renderLinkedPageHtml } from '../editor/render.ts'
 import type { Asset, Project } from '../editor/types.ts'
@@ -84,8 +85,16 @@ export function collectSiteAssets(project: Project): {
   return { files, urlById }
 }
 
+export function siteScriptBody(project: Project): string {
+  const hasScroll = project.pages.some((page) => hasScrollAnimation(page.root))
+  const hasIx = hasProjectInteractions(project)
+  return [hasScroll ? ANIMATION_SCRIPT_BODY : '', hasIx ? INTERACTION_SCRIPT_BODY : '']
+    .filter(Boolean)
+    .join('\n')
+}
+
 export function needsSiteScript(project: Project): boolean {
-  return project.pages.some((page) => hasScrollAnimation(page.root))
+  return Boolean(siteScriptBody(project))
 }
 
 export function buildSite(project: Project): SiteFile[] {
@@ -93,7 +102,7 @@ export function buildSite(project: Project): SiteFile[] {
   const withScript = needsSiteScript(project)
   const files: SiteFile[] = [{ path: 'styles.css', content: `${renderCss(project)}\n` }]
   if (withScript) {
-    files.push({ path: 'script.js', content: ANIMATION_SCRIPT_BODY })
+    files.push({ path: 'script.js', content: siteScriptBody(project) })
   }
   const assetUrl = (id: string) => urlById.get(id) ?? ''
   for (const page of project.pages) {

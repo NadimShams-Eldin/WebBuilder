@@ -41,6 +41,7 @@ export function createNode(type: NodeType, id?: string): Node {
     props: {},
     style: {},
     animation: null,
+    interactions: [],
     children: [],
   }
 

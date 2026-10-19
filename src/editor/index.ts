@@ -37,6 +37,26 @@ export {
   TIMELINE_MAX,
   type TimelineTrack,
 } from './timeline.ts'
+export {
+  collectInteractions,
+  collectNamedNodes,
+  collectProjectInteractions,
+  createInteraction,
+  DEFAULT_INTERACTION,
+  hasInteractions,
+  hasProjectInteractions,
+  INTERACTION_ACTIONS,
+  INTERACTION_EVENTS,
+  INTERACTION_SCRIPT_BODY,
+  interactionAttr,
+  isInteractionAction,
+  isInteractionEvent,
+  nodeInteractions,
+  normalizeInteractions,
+  pruneInteractions,
+  type CollectedInteraction,
+  type NamedNode,
+} from './interactions.ts'
 export { ALLOWED_CSS_PROPS, CSS_GROUPS, filterStyle, isAllowedCssProp, toKebabCase } from './cssWhitelist.ts'
 export {
   createId,
@@ -209,8 +229,11 @@ export type {
   HeadingLevel,
   InputType,
   LinkTarget,
+  InteractionAction,
+  InteractionEvent,
   Node,
   NodeAnimation,
+  NodeInteraction,
   NodeProps,
   NodeStyle,
   NodeType,

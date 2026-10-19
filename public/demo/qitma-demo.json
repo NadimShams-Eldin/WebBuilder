@@ -341,6 +341,9 @@
                             { "at": 1, "opacity": 1, "y": 0, "scale": 1 }
                           ]
                         },
+                        "interactions": [
+                          { "id": "ix_demo_hero", "event": "click", "action": "restart", "targetId": "n_c" }
+                        ],
                         "children": []
                       },
                       {

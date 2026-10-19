@@ -10,10 +10,19 @@ import {
 } from '../editor/animation.ts'
 import { assetHref, isAssetHref, parseAssetHref } from '../editor/assets.ts'
 import { internalHref, isInternalHref, parseInternalHref } from '../editor/pages.ts'
+import {
+  collectNamedNodes,
+  createInteraction,
+  INTERACTION_ACTIONS,
+  INTERACTION_EVENTS,
+  isInteractionAction,
+  isInteractionEvent,
+  nodeInteractions,
+} from '../editor/interactions.ts'
 import { selectActivePage, useEditorStore } from '../editor/store.ts'
 import { createDefaultAnimation, defaultKeyframes } from '../editor/timeline.ts'
 import { findNode } from '../editor/tree.ts'
-import type { Node, NodeAnimation, NodeProps, Project } from '../editor/types.ts'
+import type { Node, NodeAnimation, NodeInteraction, NodeProps, Project } from '../editor/types.ts'
 import { useI18n } from '../editor/useI18n.ts'
 import { FieldControl } from './FieldControl'
 import { StyleInspector } from './StyleInspector'
@@ -288,6 +297,97 @@ function AnimationFields({
   )
 }
 
+function InteractionFields({
+  node,
+  pageRoot,
+  onChange,
+  t,
+}: {
+  node: Node
+  pageRoot: Node
+  onChange: (interactions: NodeInteraction[]) => void
+  t: (key: string) => string
+}) {
+  const list = nodeInteractions(node)
+  const targets = collectNamedNodes(pageRoot).filter((item) => item.id !== pageRoot.id)
+
+  const patchAt = (index: number, partial: Partial<NodeInteraction>) => {
+    onChange(list.map((item, i) => (i === index ? { ...item, ...partial } : item)))
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {list.length === 0 ? <p className="text-xs text-neutral-400">{t('ix.empty')}</p> : null}
+      {list.map((item, index) => (
+        <div
+          key={item.id}
+          className="flex flex-col gap-2 rounded-md border border-neutral-200 p-2 dark:border-neutral-800"
+        >
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('ix.event')}</span>
+            <FieldControl
+              kind="select"
+              value={item.event}
+              options={INTERACTION_EVENTS.map((value) => ({
+                value,
+                label: t(`ix.event.${value}`),
+              }))}
+              onChange={(value) => {
+                if (isInteractionEvent(value)) patchAt(index, { event: value })
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('ix.action')}</span>
+            <FieldControl
+              kind="select"
+              value={item.action}
+              options={INTERACTION_ACTIONS.map((value) => ({
+                value,
+                label: t(`ix.action.${value}`),
+              }))}
+              onChange={(value) => {
+                if (isInteractionAction(value)) patchAt(index, { action: value })
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('ix.target')}</span>
+            <FieldControl
+              kind="select"
+              value={item.targetId}
+              options={[
+                { value: node.id, label: t('ix.self') },
+                ...targets
+                  .filter((target) => target.id !== node.id)
+                  .map((target) => ({
+                    value: target.id,
+                    label: `${target.name} · ${t(`block.${target.type}`)}`,
+                  })),
+              ]}
+              onChange={(value) => patchAt(index, { targetId: value || node.id })}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => onChange(list.filter((_, i) => i !== index))}
+            className="self-start text-xs text-red-600 hover:underline dark:text-red-400"
+          >
+            {t('ix.remove')}
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange([...list, createInteraction(node.id)])}
+        className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+      >
+        {t('ix.add')}
+      </button>
+    </div>
+  )
+}
+
 export function LeftPanel() {
   const { t } = useI18n()
   const project = useEditorStore((s) => s.project)
@@ -317,7 +417,7 @@ export function LeftPanel() {
         ) : null}
       </div>
 
-      {!node ? (
+      {!node || !page ? (
         <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
           <p className="text-sm text-neutral-400">{t('panel.empty')}</p>
         </div>
@@ -336,6 +436,13 @@ export function LeftPanel() {
               className={tabClass(tab === 'animation')}
             >
               {t('tabs.animation')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('interactions')}
+              className={tabClass(tab === 'interactions')}
+            >
+              {t('tabs.interactions')}
             </button>
           </div>
 
@@ -405,10 +512,17 @@ export function LeftPanel() {
                 node={node}
                 onChange={(style) => updateSelected({ style })}
               />
-            ) : (
+            ) : tab === 'animation' ? (
               <AnimationFields
                 animation={node.animation}
                 onChange={(animation) => updateSelected({ animation })}
+                t={t}
+              />
+            ) : (
+              <InteractionFields
+                node={node}
+                pageRoot={page.root}
+                onChange={(interactions) => updateSelected({ interactions })}
                 t={t}
               />
             )}

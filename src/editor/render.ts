@@ -1,4 +1,5 @@
-import { ANIMATION_SCRIPT, hasScrollAnimation, normalizeAnimation, renderAnimationCss } from './animation.ts'
+import { ANIMATION_SCRIPT_BODY, hasScrollAnimation, normalizeAnimation, renderAnimationCss } from './animation.ts'
+import { hasInteractions, interactionAttr, INTERACTION_SCRIPT_BODY } from './interactions.ts'
 import { filterStyle, toKebabCase } from './cssWhitelist.ts'
 import { parseAssetHref, resolveMediaSrc } from './assets.ts'
 import { pageFileName, resolveHref } from './pages.ts'
@@ -35,8 +36,13 @@ function attr(name: string, value: string | number | boolean | undefined): strin
 
 function animationAttrs(node: Node): string {
   const animation = normalizeAnimation(node.animation)
-  if (!animation) return ''
-  return `${attr('data-qanim', animation.trigger)}${attr('data-qeffect', animation.effect)}`
+  const ix = interactionAttr(node)
+  let extra = ''
+  if (animation) {
+    extra += `${attr('data-qanim', animation.trigger)}${attr('data-qeffect', animation.effect)}`
+  }
+  if (ix) extra += attr('data-qix', ix)
+  return extra
 }
 
 function openTag(tag: string, node: Node, extra = ''): string {
@@ -242,6 +248,16 @@ const PREVIEW_SCRIPT = `<script>
 })();
 </script>`
 
+function pageRuntimeScript(node: Node): string {
+  const scroll = hasScrollAnimation(node)
+  const ix = hasInteractions(node)
+  if (!scroll && !ix) return ''
+  const body = [scroll ? ANIMATION_SCRIPT_BODY : '', ix ? INTERACTION_SCRIPT_BODY : '']
+    .filter(Boolean)
+    .join('\n')
+  return `<script>\n${body}</script>`
+}
+
 export type PageHtmlMode = 'editor' | 'preview' | 'export'
 
 export function renderPageHtml(
@@ -266,7 +282,7 @@ ${renderCss(project)}
 <body>
 ${renderHtml(node, project, resolveLinks)}
 ${frameScript}
-${hasScrollAnimation(node) ? ANIMATION_SCRIPT : ''}
+${pageRuntimeScript(node)}
 </body>
 </html>`
 }

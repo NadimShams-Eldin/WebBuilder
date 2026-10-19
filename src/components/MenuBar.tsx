@@ -50,6 +50,8 @@ export function MenuBar() {
   const toggleGridOverlay = useEditorStore((s) => s.toggleGridOverlay)
   const timelineOpen = useEditorStore((s) => s.timelineOpen)
   const toggleTimeline = useEditorStore((s) => s.toggleTimeline)
+  const setLeftTab = useEditorStore((s) => s.setLeftTab)
+  const setPanelVisible = useEditorStore((s) => s.setPanelVisible)
   const resetLayout = useEditorStore((s) => s.resetLayout)
   const workspace = useEditorStore((s) => s.workspace)
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
@@ -169,6 +171,14 @@ export function MenuBar() {
         { kind: 'separator' },
         { kind: 'action', label: t('menu.gridOverlay'), onSelect: toggleGridOverlay, checked: gridOverlay },
         { kind: 'action', label: t('tl.open'), onSelect: toggleTimeline, checked: timelineOpen },
+        {
+          kind: 'action',
+          label: t('command.openInteractions'),
+          onSelect: () => {
+            setPanelVisible('left', true)
+            setLeftTab('interactions')
+          },
+        },
       ],
     },
     {

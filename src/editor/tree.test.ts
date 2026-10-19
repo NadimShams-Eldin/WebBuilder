@@ -278,6 +278,18 @@ describe('remove and clear', () => {
     assert.equal(cleared.pages[0].root.children.length, 0)
   })
 
+  it('prunes interactions that targeted a removed node', () => {
+    const heading = createNode('heading', 'h')
+    const button = createNode('button', 'b')
+    button.interactions = [{ id: 'ix_1', event: 'click', action: 'play', targetId: 'h' }]
+    const root = createNode('container', 'root')
+    root.children = [heading, button]
+    const next = removeNode(root, 'h')
+    assert.ok(next)
+    assert.equal(next.root.children.length, 1)
+    assert.deepEqual(next.root.children[0].interactions, [])
+  })
+
   it('mutates only the targeted page in a multi-page project', () => {
     const start = createProject()
     const added = addPageToProject(start, 'About')

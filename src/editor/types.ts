@@ -81,6 +81,17 @@ export type NodeAnimation = {
   keyframes?: AnimationKeyframe[]
 }
 
+export type InteractionEvent = 'click' | 'hover' | 'leave' | 'scroll'
+
+export type InteractionAction = 'play' | 'pause' | 'restart'
+
+export type NodeInteraction = {
+  id: string
+  event: InteractionEvent
+  action: InteractionAction
+  targetId: string
+}
+
 export type NodeStyle = {
   [property: string]: string | number | undefined
 }
@@ -92,6 +103,7 @@ export type Node = {
   props: NodeProps
   style: NodeStyle
   animation: NodeAnimation | null
+  interactions: NodeInteraction[]
   children: Node[]
   componentId?: string
   originId?: string

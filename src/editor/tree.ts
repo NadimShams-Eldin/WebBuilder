@@ -1,6 +1,16 @@
 import { createId, createNode, isContainerType } from './createNode.ts'
+import { pruneInteractions } from './interactions.ts'
 import { resolvePage } from './pages.ts'
-import type { Node, NodeAnimation, NodeProps, NodeStyle, NodeType, Page, Project } from './types.ts'
+import type {
+  Node,
+  NodeAnimation,
+  NodeInteraction,
+  NodeProps,
+  NodeStyle,
+  NodeType,
+  Page,
+  Project,
+} from './types.ts'
 
 export function findNode(node: Node, id: string): Node | null {
   if (node.id === id) return node
@@ -124,6 +134,7 @@ export type NodePatch = {
   props?: NodeProps
   style?: NodeStyle
   animation?: NodeAnimation | null
+  interactions?: NodeInteraction[]
 }
 
 export function updateNode(root: Node, id: string, patch: NodePatch): Node | null {
@@ -138,6 +149,7 @@ export function updateNode(root: Node, id: string, patch: NodePatch): Node | nul
         props: patch.props ? { ...node.props, ...patch.props } : node.props,
         style: patch.style ? { ...node.style, ...patch.style } : node.style,
         animation: patch.animation !== undefined ? patch.animation : node.animation,
+        interactions: patch.interactions !== undefined ? patch.interactions : node.interactions,
       }
     }
     let changed = false
@@ -239,20 +251,45 @@ export function insertAtDrop(root: Node, child: Node, intent: DropIntent): Node 
   return insertChild(root, target.parentId, child, target.index)
 }
 
-export function cloneNode(node: Node): Node {
+function cloneInteractions(list: NodeInteraction[] | undefined, idMap: Map<string, string>): NodeInteraction[] {
+  return (list ?? []).map((item) => ({
+    ...item,
+    id: createId('ix'),
+    targetId: idMap.get(item.targetId) ?? item.targetId,
+  }))
+}
+
+function cloneNodeRaw(node: Node, idMap: Map<string, string>): Node {
+  const id = createId()
+  idMap.set(node.id, id)
   const props: NodeProps = { ...node.props }
   if (Array.isArray(node.props.items)) props.items = [...node.props.items]
   if (Array.isArray(node.props.options)) props.options = [...node.props.options]
+  const children = node.children.map((child) => cloneNodeRaw(child, idMap))
   return {
     ...node,
-    id: createId(),
+    id,
     props,
     style: { ...node.style },
-    animation: node.animation ? { ...node.animation } : null,
+    animation: node.animation ? { ...node.animation, keyframes: node.animation.keyframes?.map((frame) => ({ ...frame })) } : null,
+    interactions: node.interactions ?? [],
     componentId: node.componentId,
     originId: node.originId,
-    children: node.children.map(cloneNode),
+    children,
   }
+}
+
+function remapClonedInteractions(node: Node, idMap: Map<string, string>): Node {
+  return {
+    ...node,
+    interactions: cloneInteractions(node.interactions, idMap),
+    children: node.children.map((child) => remapClonedInteractions(child, idMap)),
+  }
+}
+
+export function cloneNode(node: Node): Node {
+  const idMap = new Map<string, string>()
+  return remapClonedInteractions(cloneNodeRaw(node, idMap), idMap)
 }
 
 export function duplicateNode(root: Node, id: string): { root: Node; node: Node } | null {
@@ -342,7 +379,7 @@ export function removeNode(root: Node, id: string): { root: Node; node: Node } |
     return changed ? { ...current, children } : current
   }
 
-  return { root: walk(root), node }
+  return { root: pruneInteractions(walk(root)), node }
 }
 
 export function moveNode(root: Node, nodeId: string, intent: DropIntent): Node | null {

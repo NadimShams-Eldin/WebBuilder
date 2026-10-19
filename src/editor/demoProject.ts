@@ -12,6 +12,7 @@ type NodePatch = {
   style?: NodeStyle
   children?: Node[]
   animation?: Node['animation']
+  interactions?: Node['interactions']
 }
 
 function apply(node: Node, patch: NodePatch): Node {
@@ -22,6 +23,7 @@ function apply(node: Node, patch: NodePatch): Node {
     style: patch.style ? { ...node.style, ...patch.style } : node.style,
     children: patch.children ?? node.children,
     animation: patch.animation ?? node.animation,
+    interactions: patch.interactions ?? node.interactions,
   }
 }
 
@@ -233,6 +235,9 @@ export function createDemoProject(): Project {
         { at: 1, opacity: 1, y: 0, scale: 1 },
       ],
     },
+    interactions: [
+      { id: 'ix_demo_hero', event: 'click', action: 'restart', targetId: heroHeading.id },
+    ],
   })
 
   const moreLink = apply(createNode('link'), {

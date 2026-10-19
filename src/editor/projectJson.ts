@@ -1,4 +1,5 @@
 import { normalizeAnimation } from './animation.ts'
+import { normalizeInteractions } from './interactions.ts'
 import { createId } from './createNode.ts'
 import { DEFAULT_THEME } from './createProject.ts'
 import { isAllowedCssProp } from './cssWhitelist.ts'
@@ -145,6 +146,7 @@ function sanitizeNode(value: unknown, usedIds: Set<string>): Node | null {
     props: sanitizeProps(value.props),
     style: sanitizeStyle(value.style),
     animation: normalizeAnimation(value.animation as Node['animation']),
+    interactions: normalizeInteractions(value.interactions),
     children,
   }
   const componentId = asString(value.componentId)
