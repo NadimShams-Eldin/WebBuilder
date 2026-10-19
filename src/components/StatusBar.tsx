@@ -19,7 +19,10 @@ export function StatusBar() {
       <span className="font-medium text-neutral-600 dark:text-neutral-300">{t('status.ready')}</span>
       <span className="text-neutral-300 dark:text-neutral-600">|</span>
       <span className="truncate">
-        {t('status.selected')}: {node ? `${node.name} · ${t(`block.${node.type}`)}` : t('status.noSelection')}
+        {t('status.selected')}:{' '}
+        {node
+          ? `${node.name} · ${t(`block.${node.type}`)}${node.componentId ? ` · ${t('comp.linked')}` : ''}`
+          : t('status.noSelection')}
       </span>
       <div className="ms-auto flex items-center gap-3">
         <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">

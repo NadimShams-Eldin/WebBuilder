@@ -24,5 +24,6 @@ export function createProject(name = 'مشروع جديد'): Project {
     theme: { ...DEFAULT_THEME },
     pages: [createPage()],
     assets: [],
+    components: [],
   }
 }

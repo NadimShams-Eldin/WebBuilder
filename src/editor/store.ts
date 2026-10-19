@@ -55,6 +55,14 @@ import {
   setPageSlugInProject,
 } from './pages.ts'
 import {
+  createComponentFromNode,
+  deleteComponent,
+  detachInstance,
+  insertComponentInstance,
+  renameComponent,
+  updateComponentInstances,
+} from './components.ts'
+import {
   addNodeToProject,
   clearPageInProject,
   findNode,
@@ -143,6 +151,11 @@ export type EditorState = {
   duplicateNodes: (ids: string[]) => boolean
   deleteNodes: (ids: string[]) => boolean
   wrapSelected: (type: NodeType) => boolean
+  createComponentFromSelected: (name?: string) => boolean
+  insertComponent: (componentId: string) => boolean
+  detachSelectedComponent: () => boolean
+  renameComponentDef: (componentId: string, name: string) => boolean
+  deleteComponentDef: (componentId: string) => boolean
   styleClipboard: NodeStyle | null
   copySelectedStyle: () => boolean
   pasteStyleToSelected: () => boolean
@@ -419,14 +432,13 @@ export const useEditorStore = create<EditorState>((set, get) => {
       return true
     },
     updateSelected: (patch) => {
-      const { project, selectedId, activePageId } = get()
-      if (!selectedId) return
-      const next = updateNodeInProject(project, selectedId, patch, activePageId)
-      if (next) commit({ project: next }, selectedId)
+      const { selectedId } = get()
+      if (selectedId) get().updateNodeById(selectedId, patch)
     },
     updateNodeById: (id, patch) => {
       const { project, activePageId } = get()
-      const next = updateNodeInProject(project, id, patch, activePageId)
+      const linked = updateComponentInstances(project, id, patch, activePageId)
+      const next = linked ?? updateNodeInProject(project, id, patch, activePageId)
       if (next) commit({ project: next, selectedId: id }, id)
     },
     duplicateNodes: (ids) => {
@@ -504,6 +516,59 @@ export const useEditorStore = create<EditorState>((set, get) => {
         lastInsertError: null,
         dropPreview: null,
       })
+      return true
+    },
+    createComponentFromSelected: (name) => {
+      const { project, selectedId, activePageId, locale } = get()
+      if (!selectedId) return false
+      const result = createComponentFromNode(project, selectedId, activePageId, name)
+      if (!result) {
+        set({ lastInsertError: translate(locale, 'error.component') })
+        return false
+      }
+      commit({
+        project: result.project,
+        selectedId: result.node.id,
+        lastInsertError: null,
+        dropPreview: null,
+      })
+      return true
+    },
+    insertComponent: (componentId) => {
+      const { project, selectedId, activePageId, locale } = get()
+      const result = insertComponentInstance(project, componentId, selectedId, activePageId)
+      if (!result) {
+        set({ lastInsertError: translate(locale, 'error.insert') })
+        return false
+      }
+      commit({
+        project: result.project,
+        selectedId: result.node.id,
+        lastInsertError: null,
+        dropPreview: null,
+      })
+      return true
+    },
+    detachSelectedComponent: () => {
+      const { project, selectedId, activePageId } = get()
+      if (!selectedId) return false
+      const next = detachInstance(project, selectedId, activePageId)
+      if (!next) return false
+      commit({ project: next, selectedId, lastInsertError: null, dropPreview: null })
+      return true
+    },
+    renameComponentDef: (componentId, name) => {
+      const { project } = get()
+      const next = renameComponent(project, componentId, name)
+      if (!next) return false
+      commit({ project: next })
+      return true
+    },
+    deleteComponentDef: (componentId) => {
+      const { project } = get()
+      const next = deleteComponent(project, componentId)
+      if (!next) return false
+      commit({ project: next })
       return true
     },
     styleClipboard: null,

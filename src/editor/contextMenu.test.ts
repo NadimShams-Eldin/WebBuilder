@@ -7,7 +7,7 @@ import {
   nextMenuIndex,
 } from './contextMenu.ts'
 
-const base = { isRoot: false, hasChildren: true, hasStyleClipboard: false }
+const base = { isRoot: false, hasChildren: true, hasStyleClipboard: false, isInstance: false }
 
 function itemActions(options: Parameters<typeof buildContextMenu>[0]) {
   return buildContextMenu(options)
@@ -42,6 +42,14 @@ describe('buildContextMenu', () => {
   it('disables child selection for leaves', () => {
     const actions = itemActions({ ...base, hasChildren: false })
     assert.ok(actions.includes('select-child:off'))
+  })
+
+  it('offers save on primitives and detach on instances', () => {
+    assert.ok(itemActions(base).includes('save-component:on'))
+    assert.ok(itemActions(base).includes('detach-component:off'))
+    const instance = itemActions({ ...base, isInstance: true })
+    assert.ok(instance.includes('save-component:off'))
+    assert.ok(instance.includes('detach-component:on'))
   })
 })
 

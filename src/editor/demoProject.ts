@@ -1,3 +1,4 @@
+import { createComponentFromNode } from './components.ts'
 import { createId, createNode } from './createNode.ts'
 import { DEFAULT_THEME } from './createProject.ts'
 import { internalHref } from './pages.ts'
@@ -530,7 +531,7 @@ export function createDemoProject(): Project {
     children: [aboutHeading, aboutText, aboutList, homeLink],
   })
 
-  return {
+  const project: Project = {
     id: createId('prj'),
     name: 'قطمة',
     theme: { ...DEFAULT_THEME, backgroundColor: '#f1f5f9' },
@@ -549,5 +550,10 @@ export function createDemoProject(): Project {
       },
     ],
     assets: [],
+    components: [],
   }
+
+  const firstCard = features.children[0]
+  const saved = createComponentFromNode(project, firstCard.id, homePageId, 'بطاقة ميزة')
+  return saved?.project ?? project
 }

@@ -249,6 +249,8 @@ export function cloneNode(node: Node): Node {
     props,
     style: { ...node.style },
     animation: node.animation ? { ...node.animation } : null,
+    componentId: node.componentId,
+    originId: node.originId,
     children: node.children.map(cloneNode),
   }
 }

@@ -41,6 +41,9 @@ export function SelectionToolbar({
   const copySelectedStyle = useEditorStore((s) => s.copySelectedStyle)
   const pasteStyleToSelected = useEditorStore((s) => s.pasteStyleToSelected)
   const styleClipboard = useEditorStore((s) => s.styleClipboard)
+  const createComponentFromSelected = useEditorStore((s) => s.createComponentFromSelected)
+  const detachSelectedComponent = useEditorStore((s) => s.detachSelectedComponent)
+  const setRightTab = useEditorStore((s) => s.setRightTab)
   const [wrapOpen, setWrapOpen] = useState(false)
   const position = floatingMenuPosition(rect, frameWidth, rtl)
 
@@ -122,6 +125,37 @@ export function SelectionToolbar({
           )}
         </Icon>
       </button>
+
+      {node.componentId ? (
+        <button
+          type="button"
+          className={BUTTON_CLASS}
+          title={t('action.detachComponent')}
+          aria-label={t('action.detachComponent')}
+          onClick={() => detachSelectedComponent()}
+        >
+          <Icon>
+            <path d="M4 8h8M6 5.5 3.5 8 6 10.5M10 5.5 12.5 8 10 10.5" />
+          </Icon>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className={BUTTON_CLASS}
+          title={t('action.saveComponent')}
+          aria-label={t('action.saveComponent')}
+          onClick={() => {
+            const name = window.prompt(t('comp.promptName'))
+            if (name === null) return
+            if (createComponentFromSelected(name)) setRightTab('components')
+          }}
+        >
+          <Icon>
+            <rect x="3" y="3" width="10" height="10" rx="1.5" />
+            <path d="M6 8h4M8 6v4" />
+          </Icon>
+        </button>
+      )}
 
       <span className="mx-0.5 h-4 w-px bg-neutral-200 dark:bg-neutral-700" />
 

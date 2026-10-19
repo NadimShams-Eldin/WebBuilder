@@ -9,6 +9,8 @@ export type ContextAction =
   | 'select-parent'
   | 'select-child'
   | 'open-properties'
+  | 'save-component'
+  | 'detach-component'
 
 export type MenuEntry =
   | {
@@ -25,6 +27,7 @@ export type ContextMenuOptions = {
   isRoot: boolean
   hasChildren: boolean
   hasStyleClipboard: boolean
+  isInstance: boolean
 }
 
 export function buildContextMenu(options: ContextMenuOptions): MenuEntry[] {
@@ -76,6 +79,19 @@ export function buildContextMenu(options: ContextMenuOptions): MenuEntry[] {
       kind: 'item',
       action: 'open-properties',
       labelKey: 'action.openProperties',
+    },
+    { kind: 'separator', id: 'component-start' },
+    {
+      kind: 'item',
+      action: 'save-component',
+      labelKey: 'action.saveComponent',
+      disabled: root || options.isInstance,
+    },
+    {
+      kind: 'item',
+      action: 'detach-component',
+      labelKey: 'action.detachComponent',
+      disabled: !options.isInstance,
     },
     { kind: 'separator', id: 'delete-start' },
     {

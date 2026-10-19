@@ -421,7 +421,7 @@
             "animation": null,
             "children": [
               {
-                "id": "n_n",
+                "id": "n_1w",
                 "type": "flex",
                 "name": "صندوق مرن",
                 "props": {},
@@ -441,7 +441,7 @@
                 "animation": null,
                 "children": [
                   {
-                    "id": "n_o",
+                    "id": "n_1x",
                     "type": "heading",
                     "name": "عنوان",
                     "props": {
@@ -456,10 +456,12 @@
                       "color": "#0f172a"
                     },
                     "animation": null,
-                    "children": []
+                    "children": [],
+                    "originId": "n_1u",
+                    "componentId": "cmp_1s"
                   },
                   {
-                    "id": "n_p",
+                    "id": "n_1y",
                     "type": "text",
                     "name": "نص",
                     "props": {
@@ -472,9 +474,13 @@
                       "color": "#64748b"
                     },
                     "animation": null,
-                    "children": []
+                    "children": [],
+                    "originId": "n_1v",
+                    "componentId": "cmp_1s"
                   }
-                ]
+                ],
+                "originId": "cmp_1s",
+                "componentId": "cmp_1s"
               },
               {
                 "id": "n_q",
@@ -1168,5 +1174,73 @@
       }
     }
   ],
-  "assets": []
+  "assets": [],
+  "components": [
+    {
+      "id": "cmp_1s",
+      "name": "بطاقة ميزة",
+      "root": {
+        "id": "n_1t",
+        "type": "flex",
+        "name": "صندوق مرن",
+        "props": {},
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "flexWrap": "wrap",
+          "alignItems": "stretch",
+          "justifyContent": "flex-start",
+          "gap": "0.5rem",
+          "width": "100%",
+          "padding": "1.25rem",
+          "backgroundColor": "#ffffff",
+          "border": "1px solid #e2e8f0",
+          "borderRadius": "0.75rem"
+        },
+        "animation": null,
+        "children": [
+          {
+            "id": "n_1u",
+            "type": "heading",
+            "name": "عنوان",
+            "props": {
+              "text": "تخطيط حر",
+              "level": 3
+            },
+            "style": {
+              "fontSize": "1.125rem",
+              "fontWeight": 700,
+              "lineHeight": 1.3,
+              "margin": "0",
+              "color": "#0f172a"
+            },
+            "animation": null,
+            "children": [],
+            "originId": "n_1u",
+            "componentId": "cmp_1s"
+          },
+          {
+            "id": "n_1v",
+            "type": "text",
+            "name": "نص",
+            "props": {
+              "text": "Flex و Grid كأصول أولية، بلا قوالب جاهزة."
+            },
+            "style": {
+              "fontSize": "0.95rem",
+              "lineHeight": 1.7,
+              "margin": "0",
+              "color": "#64748b"
+            },
+            "animation": null,
+            "children": [],
+            "originId": "n_1v",
+            "componentId": "cmp_1s"
+          }
+        ],
+        "originId": "cmp_1s",
+        "componentId": "cmp_1s"
+      }
+    }
+  ]
 }

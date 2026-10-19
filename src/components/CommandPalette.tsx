@@ -36,6 +36,10 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   const saveCustomWorkspace = useEditorStore((s) => s.saveCustomWorkspace)
   const workspacePresets = useEditorStore((s) => s.workspacePresets)
   const setDensity = useEditorStore((s) => s.setDensity)
+  const project = useEditorStore((s) => s.project)
+  const insertComponent = useEditorStore((s) => s.insertComponent)
+  const createComponentFromSelected = useEditorStore((s) => s.createComponentFromSelected)
+  const setRightTab = useEditorStore((s) => s.setRightTab)
 
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -153,21 +157,47 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
       },
     ]
 
+    const componentCommands: Command[] = [
+      {
+        id: 'component:save',
+        label: t('comp.save'),
+        group: t('palette.group.components'),
+        keywords: ['component', 'save', 'مكوّن'],
+        run: () => {
+          const name = window.prompt(t('comp.promptName'))
+          if (name === null) return
+          if (createComponentFromSelected(name)) setRightTab('components')
+        },
+      },
+      ...project.components.map((component) => ({
+        id: `component:insert:${component.id}`,
+        label: `${t('comp.insert')}: ${component.name}`,
+        group: t('palette.group.components'),
+        keywords: ['component', 'insert', component.name, 'مكوّن'],
+        run: () => insertComponent(component.id),
+      })),
+    ]
+
     return [
       ...insertCommands,
       ...viewCommands,
       ...pageCommands,
       ...projectCommands,
       ...workspaceCommands,
+      ...componentCommands,
     ].map((command) => ({ ...command, run: () => (command.run(), onClose()) }))
   }, [
     addBlock,
     addPage,
     applyWorkspace,
+    createComponentFromSelected,
+    insertComponent,
     io,
     onClose,
+    project.components,
     saveCustomWorkspace,
     setDensity,
+    setRightTab,
     setZoom,
     setWorkspace,
     t,

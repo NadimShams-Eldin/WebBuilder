@@ -3,6 +3,7 @@ import { buildContextMenu, type ContextAction } from '../editor/contextMenu.ts'
 import { selectActivePage, useEditorStore } from '../editor/store.ts'
 import { findNode } from '../editor/tree.ts'
 import type { NodeType } from '../editor/types.ts'
+import { useI18n } from '../editor/useI18n.ts'
 import type { ContextMenuState } from './ContextMenu'
 
 const WRAP_ACTIONS: Partial<Record<ContextAction, NodeType>> = {
@@ -12,6 +13,7 @@ const WRAP_ACTIONS: Partial<Record<ContextAction, NodeType>> = {
 }
 
 export function useNodeContextMenu() {
+  const { t } = useI18n()
   const page = useEditorStore(selectActivePage)
   const styleClipboard = useEditorStore((s) => s.styleClipboard)
   const setSelectedId = useEditorStore((s) => s.setSelectedId)
@@ -24,6 +26,9 @@ export function useNodeContextMenu() {
   const selectFirstChildOfSelected = useEditorStore((s) => s.selectFirstChildOfSelected)
   const setLeftTab = useEditorStore((s) => s.setLeftTab)
   const setPanelVisible = useEditorStore((s) => s.setPanelVisible)
+  const setRightTab = useEditorStore((s) => s.setRightTab)
+  const createComponentFromSelected = useEditorStore((s) => s.createComponentFromSelected)
+  const detachSelectedComponent = useEditorStore((s) => s.detachSelectedComponent)
   const [menu, setMenu] = useState<ContextMenuState | null>(null)
 
   const openMenu = useCallback(
@@ -65,6 +70,16 @@ export function useNodeContextMenu() {
           selectFirstChildOfSelected()
           return
         }
+        if (action === 'save-component') {
+          const name = window.prompt(t('comp.promptName'))
+          if (name === null) return
+          if (createComponentFromSelected(name)) setRightTab('components')
+          return
+        }
+        if (action === 'detach-component') {
+          detachSelectedComponent()
+          return
+        }
         const wrap = WRAP_ACTIONS[action]
         if (wrap) wrapSelected(wrap)
       }
@@ -77,6 +92,7 @@ export function useNodeContextMenu() {
           isRoot,
           hasChildren: target.children.length > 0,
           hasStyleClipboard: Boolean(styleClipboard),
+          isInstance: Boolean(target.componentId),
         }),
         onSelect: run,
       })
@@ -94,6 +110,10 @@ export function useNodeContextMenu() {
       selectFirstChildOfSelected,
       setLeftTab,
       setPanelVisible,
+      setRightTab,
+      createComponentFromSelected,
+      detachSelectedComponent,
+      t,
     ],
   )
 

@@ -84,6 +84,8 @@ export type Node = {
   style: NodeStyle
   animation: NodeAnimation | null
   children: Node[]
+  componentId?: string
+  originId?: string
 }
 
 export type Theme = {
@@ -107,10 +109,17 @@ export type Page = {
   root: Node
 }
 
+export type ComponentDef = {
+  id: string
+  name: string
+  root: Node
+}
+
 export type Project = {
   id: string
   name: string
   theme: Theme
   pages: Page[]
   assets: Asset[]
+  components: ComponentDef[]
 }

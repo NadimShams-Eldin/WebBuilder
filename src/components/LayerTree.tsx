@@ -169,6 +169,11 @@ function LayerItem({
             {badge.label}
           </span>
           <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
+          {node.componentId ? (
+            <span className="shrink-0 rounded-full bg-amber-100 px-1.5 text-[10px] text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+              {t('comp.linked')}
+            </span>
+          ) : null}
           {hasChildren ? (
             <span className="shrink-0 rounded-full bg-neutral-100 px-1.5 text-[10px] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
               {node.children.length}

@@ -64,6 +64,7 @@ function projectWith(root: Node): Project {
     },
     pages: [{ id: 'p1', name: 'رئيسية', slug: 'index', root }],
     assets: [],
+    components: [],
   }
 }
 

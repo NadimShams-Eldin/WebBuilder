@@ -7,6 +7,7 @@ import {
   NODE_TYPES,
   type Asset,
   type ButtonType,
+  type ComponentDef,
   type FormMethod,
   type InputType,
   type LinkTarget,
@@ -137,7 +138,7 @@ function sanitizeNode(value: unknown, usedIds: Set<string>): Node | null {
         .map((child) => sanitizeNode(child, usedIds))
         .filter((child): child is Node => Boolean(child))
     : []
-  return {
+  const node: Node = {
     id,
     type: value.type,
     name: asString(value.name, value.type),
@@ -146,6 +147,11 @@ function sanitizeNode(value: unknown, usedIds: Set<string>): Node | null {
     animation: normalizeAnimation(value.animation as Node['animation']),
     children,
   }
+  const componentId = asString(value.componentId)
+  const originId = asString(value.originId)
+  if (componentId) node.componentId = componentId
+  if (originId) node.originId = originId
+  return node
 }
 
 function sanitizeAsset(value: unknown, usedIds: Set<string>): Asset | null {
@@ -191,12 +197,28 @@ export function sanitizeProject(value: unknown): Project | null {
     const asset = sanitizeAsset(item, usedIds)
     if (asset) assets.push(asset)
   }
+  const componentsRaw = Array.isArray(value.components) ? value.components : []
+  const components: ComponentDef[] = []
+  for (const item of componentsRaw) {
+    if (!isRecord(item)) continue
+    const root = sanitizeNode(item.root, usedIds)
+    if (!root) continue
+    let componentId = asString(item.id)
+    if (!componentId || usedIds.has(componentId)) componentId = createId('cmp')
+    usedIds.add(componentId)
+    components.push({
+      id: componentId,
+      name: asString(item.name, 'مكوّن'),
+      root,
+    })
+  }
   return {
     id,
     name: asString(value.name, 'Qitma'),
     theme: sanitizeTheme(value.theme),
     pages,
     assets,
+    components,
   }
 }
 

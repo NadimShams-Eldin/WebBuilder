@@ -3,6 +3,7 @@ import { BLOCK_GROUPS, type BlockDef } from '../blocks/registry.ts'
 import { blockDragId } from '../editor/dnd.ts'
 import { selectActivePage, useEditorStore, type RightTab } from '../editor/store.ts'
 import { useI18n } from '../editor/useI18n.ts'
+import { ComponentLibrary } from './ComponentLibrary'
 import { ExtractedContent } from './ExtractedContent'
 import { LayerTree } from './LayerTree'
 
@@ -58,6 +59,9 @@ export function RightPanel() {
         <button type="button" onClick={() => setTab('extracted')} className={tabClass('extracted')}>
           {t('tabs.extracted')}
         </button>
+        <button type="button" onClick={() => setTab('components')} className={tabClass('components')}>
+          {t('tabs.components')}
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
@@ -93,6 +97,8 @@ export function RightPanel() {
             dropPreview={dropPreview}
             onSelect={setSelectedId}
           />
+        ) : tab === 'components' ? (
+          <ComponentLibrary />
         ) : (
           <ExtractedContent root={page.root} />
         )}
