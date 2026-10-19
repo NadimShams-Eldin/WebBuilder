@@ -1,4 +1,11 @@
-import type { AnimationEffect, AnimationTrigger, Node, NodeAnimation, Project } from './types.ts'
+import type {
+  AnimationEffect,
+  AnimationKeyframe,
+  AnimationTrigger,
+  Node,
+  NodeAnimation,
+  Project,
+} from './types.ts'
 
 export const ANIMATION_TRIGGERS: readonly AnimationTrigger[] = ['scroll', 'hover', 'load']
 
@@ -74,15 +81,48 @@ export function isAnimationEasing(value: unknown): value is AnimationEasing {
   return (ANIMATION_EASINGS as readonly string[]).includes(String(value))
 }
 
+function sanitizeKeyframe(value: unknown): AnimationKeyframe | null {
+  if (!value || typeof value !== 'object') return null
+  const frame = value as AnimationKeyframe
+  const at = typeof frame.at === 'number' && Number.isFinite(frame.at) ? frame.at : null
+  if (at === null) return null
+  const next: AnimationKeyframe = { at: Math.min(1, Math.max(0, Math.round(at * 1000) / 1000)) }
+  if (typeof frame.opacity === 'number' && Number.isFinite(frame.opacity)) {
+    next.opacity = Math.min(1, Math.max(0, frame.opacity))
+  }
+  if (typeof frame.x === 'number' && Number.isFinite(frame.x)) next.x = frame.x
+  if (typeof frame.y === 'number' && Number.isFinite(frame.y)) next.y = frame.y
+  if (typeof frame.scale === 'number' && Number.isFinite(frame.scale)) {
+    next.scale = Math.min(2, Math.max(0.1, frame.scale))
+  }
+  return next
+}
+
 export function normalizeAnimation(value: NodeAnimation | null | undefined): NodeAnimation | null {
   if (!value) return null
+  const keyframes = Array.isArray(value.keyframes)
+    ? value.keyframes.map(sanitizeKeyframe).filter((frame): frame is AnimationKeyframe => Boolean(frame))
+    : undefined
   return {
     trigger: isAnimationTrigger(value.trigger) ? value.trigger : DEFAULT_ANIMATION.trigger,
     effect: isAnimationEffect(value.effect) ? value.effect : DEFAULT_ANIMATION.effect,
     delay: clampTime(value.delay, DEFAULT_ANIMATION.delay),
     duration: clampTime(value.duration, DEFAULT_ANIMATION.duration),
     easing: isAnimationEasing(value.easing) ? value.easing : DEFAULT_ANIMATION.easing,
+    keyframes: keyframes && keyframes.length >= 2 ? keyframes.sort((a, b) => a.at - b.at) : undefined,
   }
+}
+
+function frameToCss(frame: AnimationKeyframe): string {
+  const parts: string[] = []
+  if (frame.opacity !== undefined) parts.push(`opacity: ${frame.opacity}`)
+  const transforms: string[] = []
+  if (frame.x) transforms.push(`translateX(${frame.x}px)`)
+  if (frame.y) transforms.push(`translateY(${frame.y}px)`)
+  if (frame.scale !== undefined && frame.scale !== 1) transforms.push(`scale(${frame.scale})`)
+  if (transforms.length > 0) parts.push(`transform: ${transforms.join(' ')}`)
+  else parts.push('transform: none')
+  return parts.join('; ')
 }
 
 export type AnimatedNode = {
@@ -117,7 +157,9 @@ export function renderAnimationCss(project: Project): string {
   const items = collectProjectAnimated(project)
   if (items.length === 0) return ''
 
-  const used = new Set(items.map((item) => item.animation.effect))
+  const used = new Set(
+    items.filter((item) => !item.animation.keyframes).map((item) => item.animation.effect),
+  )
   const lines: string[] = []
 
   for (const effect of ANIMATION_EFFECTS) {
@@ -128,8 +170,23 @@ export function renderAnimationCss(project: Project): string {
   for (const { id, animation } of items) {
     const cls = `.${classNameFor(id)}`
     const timing = `${animation.duration}s ${animation.easing} ${animation.delay}s`
-    if (animation.trigger === 'load') {
-      lines.push(`${cls} { animation: q-anim-${animation.effect} ${timing} both; }`)
+    const customName = animation.keyframes ? `q-anim-${id}` : `q-anim-${animation.effect}`
+    if (animation.keyframes) {
+      const steps = animation.keyframes
+        .map((frame) => `${Math.round(frame.at * 100)}% { ${frameToCss(frame)}; }`)
+        .join(' ')
+      lines.push(`@keyframes ${customName} { ${steps} }`)
+    }
+    if (animation.trigger === 'load' || animation.keyframes) {
+      lines.push(`${cls} { animation: ${customName} ${timing} both; }`)
+      if (animation.trigger === 'hover') {
+        lines.push(`${cls} { animation-play-state: paused; }`)
+        lines.push(`${cls}:hover, ${cls}:focus-visible { animation-play-state: running; }`)
+      }
+      if (animation.trigger === 'scroll' && animation.keyframes) {
+        lines.push(`${cls} { animation-play-state: paused; }`)
+        lines.push(`${cls}.q-in { animation-play-state: running; }`)
+      }
       continue
     }
     lines.push(

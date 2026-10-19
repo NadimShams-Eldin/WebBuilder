@@ -18,6 +18,25 @@ export {
   renderAnimationCss,
   type AnimationEasing,
 } from './animation.ts'
+export {
+  addKeyframe,
+  collectTimelineTracks,
+  createDefaultAnimation,
+  defaultKeyframes,
+  interpolateKeyframes,
+  moveKeyframe,
+  normalizeKeyframes,
+  patchTrackTiming,
+  pageHasAnimation,
+  pxToSeconds,
+  removeKeyframe,
+  scrubStyle,
+  secondsToPx,
+  timelineDuration,
+  PX_PER_SECOND,
+  TIMELINE_MAX,
+  type TimelineTrack,
+} from './timeline.ts'
 export { ALLOWED_CSS_PROPS, CSS_GROUPS, filterStyle, isAllowedCssProp, toKebabCase } from './cssWhitelist.ts'
 export {
   createId,
@@ -181,6 +200,7 @@ export {
 } from './viewport.ts'
 export type {
   AnimationEffect,
+  AnimationKeyframe,
   AnimationTrigger,
   Asset,
   ButtonType,

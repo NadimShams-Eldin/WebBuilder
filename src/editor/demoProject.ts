@@ -193,6 +193,10 @@ export function createDemoProject(): Project {
       delay: 0,
       duration: 0.7,
       easing: 'ease-out',
+      keyframes: [
+        { at: 0, opacity: 0, y: 16, scale: 1 },
+        { at: 1, opacity: 1, y: 0, scale: 1 },
+      ],
     },
   })
 
@@ -217,6 +221,17 @@ export function createDemoProject(): Project {
       padding: '0.75rem 1.5rem',
       borderRadius: '0.5rem',
       fontWeight: 600,
+    },
+    animation: {
+      trigger: 'load',
+      effect: 'slide-up',
+      delay: 0.25,
+      duration: 0.55,
+      easing: 'ease-out',
+      keyframes: [
+        { at: 0, opacity: 0, y: 24, scale: 1 },
+        { at: 1, opacity: 1, y: 0, scale: 1 },
+      ],
     },
   })
 

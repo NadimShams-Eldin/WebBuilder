@@ -268,7 +268,11 @@
                       "effect": "fade",
                       "delay": 0,
                       "duration": 0.7,
-                      "easing": "ease-out"
+                      "easing": "ease-out",
+                      "keyframes": [
+                        { "at": 0, "opacity": 0, "y": 16, "scale": 1 },
+                        { "at": 1, "opacity": 1, "y": 0, "scale": 1 }
+                      ]
                     },
                     "children": []
                   },
@@ -326,7 +330,17 @@
                           "fontSize": "0.875rem",
                           "fontWeight": 600
                         },
-                        "animation": null,
+                        "animation": {
+                          "trigger": "load",
+                          "effect": "slide-up",
+                          "delay": 0.25,
+                          "duration": 0.55,
+                          "easing": "ease-out",
+                          "keyframes": [
+                            { "at": 0, "opacity": 0, "y": 24, "scale": 1 },
+                            { "at": 1, "opacity": 1, "y": 0, "scale": 1 }
+                          ]
+                        },
                         "children": []
                       },
                       {

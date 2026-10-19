@@ -44,6 +44,14 @@ const gridIcon = (
 )
 const panelLeftIcon = <Icon><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></Icon>
 const panelRightIcon = <Icon><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></Icon>
+const timelineIcon = (
+  <Icon>
+    <path d="M4 6h16M4 12h16M4 18h10" />
+    <circle cx="8" cy="6" r="1.4" fill="currentColor" />
+    <circle cx="14" cy="12" r="1.4" fill="currentColor" />
+    <circle cx="10" cy="18" r="1.4" fill="currentColor" />
+  </Icon>
+)
 const previewIcon = (
   <Icon>
     <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
@@ -123,6 +131,8 @@ export function Toolbar() {
   const togglePanel = useEditorStore((s) => s.togglePanel)
   const gridOverlay = useEditorStore((s) => s.gridOverlay)
   const toggleGridOverlay = useEditorStore((s) => s.toggleGridOverlay)
+  const timelineOpen = useEditorStore((s) => s.timelineOpen)
+  const toggleTimeline = useEditorStore((s) => s.toggleTimeline)
   const workspace = useEditorStore((s) => s.workspace)
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
   const theme = useEditorStore((s) => s.theme)
@@ -187,6 +197,9 @@ export function Toolbar() {
       <Divider />
       <ToolButton title={t('menu.gridOverlay')} onClick={toggleGridOverlay} active={gridOverlay}>
         {gridIcon}
+      </ToolButton>
+      <ToolButton title={t('tl.open')} onClick={toggleTimeline} active={timelineOpen}>
+        {timelineIcon}
       </ToolButton>
       <ToolButton title={t('menu.panelLeft')} onClick={() => togglePanel('left')} active={panels.left}>
         {panelLeftIcon}

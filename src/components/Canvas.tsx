@@ -15,6 +15,7 @@ import { CanvasGuides } from './CanvasGuides'
 import { ContextMenu } from './ContextMenu'
 import { SelectionToolbar } from './SelectionToolbar'
 import { useNodeContextMenu } from './useNodeContextMenu'
+import { useTimelineScrub } from './useTimelineScrub'
 
 type OverlayRect = { top: number; left: number; width: number; height: number }
 
@@ -91,6 +92,7 @@ export function Canvas() {
   const [dropBox, setDropBox] = useState<IndicatorBox | null>(null)
   const [altDown, setAltDown] = useState(false)
   const [frameEl, setFrameEl] = useState<HTMLIFrameElement | null>(null)
+  useTimelineScrub(preview ? null : frameEl)
 
   const page = getActivePage(project, activePageId)
   const selectedNode = page && selectedId ? findNode(page.root, selectedId) : null

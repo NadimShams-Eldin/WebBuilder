@@ -11,6 +11,7 @@ import {
 import { assetHref, isAssetHref, parseAssetHref } from '../editor/assets.ts'
 import { internalHref, isInternalHref, parseInternalHref } from '../editor/pages.ts'
 import { selectActivePage, useEditorStore } from '../editor/store.ts'
+import { createDefaultAnimation, defaultKeyframes } from '../editor/timeline.ts'
 import { findNode } from '../editor/tree.ts'
 import type { Node, NodeAnimation, NodeProps, Project } from '../editor/types.ts'
 import { useI18n } from '../editor/useI18n.ts'
@@ -191,6 +192,8 @@ function AnimationFields({
 }) {
   const enabled = Boolean(animation)
   const current = normalizeAnimation(animation) ?? DEFAULT_ANIMATION
+  const setTimelineOpen = useEditorStore((s) => s.setTimelineOpen)
+  const timelineOpen = useEditorStore((s) => s.timelineOpen)
 
   const patch = (partial: Partial<NodeAnimation>) => {
     onChange({ ...current, ...partial })
@@ -202,7 +205,9 @@ function AnimationFields({
         <input
           type="checkbox"
           checked={enabled}
-          onChange={(event) => onChange(event.target.checked ? { ...DEFAULT_ANIMATION } : null)}
+          onChange={(event) =>
+            onChange(event.target.checked ? createDefaultAnimation() : null)
+          }
         />
         {t('anim.enable')}
       </label>
@@ -232,7 +237,9 @@ function AnimationFields({
                 label: t(`anim.effect.${value}`),
               }))}
               onChange={(value) => {
-                if (isAnimationEffect(value)) patch({ effect: value })
+                if (isAnimationEffect(value)) {
+                  patch({ effect: value, keyframes: defaultKeyframes(value) })
+                }
               }}
             />
           </label>
@@ -270,6 +277,13 @@ function AnimationFields({
       ) : (
         <p className="text-xs text-neutral-400">{t('anim.empty')}</p>
       )}
+      <button
+        type="button"
+        onClick={() => setTimelineOpen(true)}
+        className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+      >
+        {timelineOpen ? t('tl.title') : t('tl.open')}
+      </button>
     </div>
   )
 }

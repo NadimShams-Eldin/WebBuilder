@@ -64,12 +64,21 @@ export type AnimationEffect =
   | 'slide-right'
   | 'zoom'
 
+export type AnimationKeyframe = {
+  at: number
+  opacity?: number
+  x?: number
+  y?: number
+  scale?: number
+}
+
 export type NodeAnimation = {
   trigger: AnimationTrigger
   effect: AnimationEffect
   delay: number
   duration: number
   easing: string
+  keyframes?: AnimationKeyframe[]
 }
 
 export type NodeStyle = {

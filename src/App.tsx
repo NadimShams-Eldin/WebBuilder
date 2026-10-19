@@ -10,6 +10,7 @@ import { PanelCollapseStrip, PanelResizer } from './components/PanelResizer'
 import { RightPanel } from './components/RightPanel'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { StatusBar } from './components/StatusBar'
+import { Timeline } from './components/Timeline'
 import { Toolbar } from './components/Toolbar'
 import { useEditorShortcuts } from './components/useEditorShortcuts'
 import { localeDir } from './editor/chromePrefs.ts'
@@ -55,6 +56,7 @@ export default function App() {
           <div className="flex min-h-0 flex-1 flex-col">
             {preview ? null : <PageTabs />}
             <CanvasArea />
+            {preview ? null : <Timeline />}
             {preview ? null : <Breadcrumb />}
           </div>
           {preview ? null : panels.left ? (

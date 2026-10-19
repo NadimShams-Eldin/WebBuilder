@@ -48,6 +48,8 @@ export function MenuBar() {
   const togglePanel = useEditorStore((s) => s.togglePanel)
   const gridOverlay = useEditorStore((s) => s.gridOverlay)
   const toggleGridOverlay = useEditorStore((s) => s.toggleGridOverlay)
+  const timelineOpen = useEditorStore((s) => s.timelineOpen)
+  const toggleTimeline = useEditorStore((s) => s.toggleTimeline)
   const resetLayout = useEditorStore((s) => s.resetLayout)
   const workspace = useEditorStore((s) => s.workspace)
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
@@ -166,6 +168,7 @@ export function MenuBar() {
         },
         { kind: 'separator' },
         { kind: 'action', label: t('menu.gridOverlay'), onSelect: toggleGridOverlay, checked: gridOverlay },
+        { kind: 'action', label: t('tl.open'), onSelect: toggleTimeline, checked: timelineOpen },
       ],
     },
     {

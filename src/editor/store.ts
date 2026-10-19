@@ -114,6 +114,8 @@ export type EditorState = {
   activeWorkspaceId: string
   hasCustomWorkspace: boolean
   dropPreview: DropIntent | null
+  timelineOpen: boolean
+  playhead: number
   history: HistoryState
   theme: EditorTheme
   locale: Locale
@@ -139,6 +141,9 @@ export type EditorState = {
   saveCustomWorkspace: () => void
   workspacePresets: () => WorkspacePreset[]
   setDropPreview: (preview: DropIntent | null) => void
+  setTimelineOpen: (open: boolean) => void
+  toggleTimeline: () => void
+  setPlayhead: (seconds: number) => void
   setTheme: (theme: EditorTheme) => void
   setLocale: (locale: Locale) => void
   addBlock: (type: NodeType) => boolean
@@ -257,6 +262,8 @@ export const useEditorStore = create<EditorState>((set, get) => {
     activeWorkspaceId,
     hasCustomWorkspace: customWorkspace !== null,
     dropPreview: null,
+    timelineOpen: false,
+    playhead: 0,
     history: emptyHistory(),
     theme: initialChrome.theme,
     locale: initialChrome.locale,
@@ -294,7 +301,14 @@ export const useEditorStore = create<EditorState>((set, get) => {
     setWorkspace: (workspace) => {
       coalesce = null
       if (workspace === 'preview') {
-        set({ workspace, selectedId: null, dropPreview: null, lastInsertError: null })
+        set({
+          workspace,
+          selectedId: null,
+          dropPreview: null,
+          lastInsertError: null,
+          timelineOpen: false,
+          playhead: 0,
+        })
         return
       }
       set({ workspace })
@@ -379,6 +393,12 @@ export const useEditorStore = create<EditorState>((set, get) => {
     },
     workspacePresets: () => workspaceList(customWorkspace),
     setDropPreview: (dropPreview) => set({ dropPreview }),
+    setTimelineOpen: (timelineOpen) => set({ timelineOpen, playhead: timelineOpen ? get().playhead : 0 }),
+    toggleTimeline: () => {
+      const open = !get().timelineOpen
+      set({ timelineOpen: open, playhead: open ? get().playhead : 0 })
+    },
+    setPlayhead: (seconds) => set({ playhead: Math.max(0, seconds) }),
     setTheme: (theme) => {
       persistChrome(theme, get().locale)
       set({ theme })

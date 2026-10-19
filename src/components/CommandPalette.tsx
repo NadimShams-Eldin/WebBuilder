@@ -29,6 +29,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   const addPage = useEditorStore((s) => s.addPage)
   const togglePanel = useEditorStore((s) => s.togglePanel)
   const toggleGridOverlay = useEditorStore((s) => s.toggleGridOverlay)
+  const toggleTimeline = useEditorStore((s) => s.toggleTimeline)
   const setWorkspace = useEditorStore((s) => s.setWorkspace)
   const setZoom = useEditorStore((s) => s.setZoom)
   const locale = useEditorStore((s) => s.locale)
@@ -83,6 +84,13 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         group: t('palette.group.view'),
         keywords: ['grid', 'overlay', 'guides'],
         run: () => toggleGridOverlay(),
+      },
+      {
+        id: 'view:timeline',
+        label: t('command.toggleTimeline'),
+        group: t('palette.group.view'),
+        keywords: ['timeline', 'animation', 'motion', 'خط', 'حركة'],
+        run: () => toggleTimeline(),
       },
       {
         id: 'view:zoom-reset',
@@ -203,6 +211,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     t,
     toggleGridOverlay,
     togglePanel,
+    toggleTimeline,
     workspacePresets,
   ])
 

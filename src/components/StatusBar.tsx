@@ -11,6 +11,8 @@ export function StatusBar() {
   const page = useEditorStore(selectActivePage)
   const node = page && selectedId ? findNode(page.root, selectedId) : null
   const activeWorkspaceId = useEditorStore((s) => s.activeWorkspaceId)
+  const timelineOpen = useEditorStore((s) => s.timelineOpen)
+  const playhead = useEditorStore((s) => s.playhead)
   const workspaceNameKey =
     activeWorkspaceId === 'custom' ? 'workspace.custom' : `workspace.${activeWorkspaceId}`
 
@@ -25,6 +27,12 @@ export function StatusBar() {
           : t('status.noSelection')}
       </span>
       <div className="ms-auto flex items-center gap-3">
+        {timelineOpen ? (
+          <span>
+            {t('tl.title')}: {playhead.toFixed(2)}
+            {t('tl.seconds')}
+          </span>
+        ) : null}
         <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
           {t(workspaceNameKey)}
         </span>
