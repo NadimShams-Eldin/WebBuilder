@@ -1,6 +1,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   addTrackTemplate,
+  asHtmlElement,
   gridOverlayLines,
   parseCssLength,
   parseTrackSizes,
@@ -46,8 +47,7 @@ const ALIGN_OPTIONS = ['stretch', 'flex-start', 'center', 'flex-end']
 
 function elementFor(frame: HTMLIFrameElement | null, id: string): HTMLElement | null {
   try {
-    const el = frame?.contentDocument?.querySelector(`[data-qid="${CSS.escape(id)}"]`)
-    return el instanceof HTMLElement ? el : null
+    return asHtmlElement(frame?.contentDocument?.querySelector(`[data-qid="${CSS.escape(id)}"]`))
   } catch {
     return null
   }

@@ -8,6 +8,14 @@ export type GuideRect = {
   height: number
 }
 
+export function asHtmlElement(value: unknown): HTMLElement | null {
+  if (!value || typeof value !== 'object') return null
+  const node = value as { nodeType?: number; getBoundingClientRect?: unknown }
+  if (node.nodeType !== 1) return null
+  if (typeof node.getBoundingClientRect !== 'function') return null
+  return value as HTMLElement
+}
+
 export function collectEmptyContainerIds(root: Node): string[] {
   const ids: string[] = []
   const walk = (node: Node) => {

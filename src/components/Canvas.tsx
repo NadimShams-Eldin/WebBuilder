@@ -7,6 +7,7 @@ import {
   type BoxModel,
 } from '../editor/boxModel.ts'
 import {
+  asHtmlElement,
   collectEmptyContainerIds,
   gridOverlayLines,
   measureSegments,
@@ -39,8 +40,8 @@ type CanvasMessage = {
 }
 
 function queryNodeRect(doc: Document, id: string): OverlayRect | null {
-  const el = doc.querySelector(`[data-qid="${CSS.escape(id)}"]`)
-  if (!(el instanceof HTMLElement)) return null
+  const el = asHtmlElement(doc.querySelector(`[data-qid="${CSS.escape(id)}"]`))
+  if (!el) return null
   const rect = el.getBoundingClientRect()
   return {
     top: rect.top,
@@ -56,8 +57,8 @@ function parseGap(value: string): number {
 }
 
 function queryBoxModel(doc: Document, id: string, rect: OverlayRect): BoxModel | null {
-  const el = doc.querySelector(`[data-qid="${CSS.escape(id)}"]`)
-  if (!(el instanceof HTMLElement)) return null
+  const el = asHtmlElement(doc.querySelector(`[data-qid="${CSS.escape(id)}"]`))
+  if (!el) return null
   try {
     return boxModelFromRect(rect, readBoxSides(getComputedStyle(el)))
   } catch {
@@ -70,8 +71,8 @@ function queryBoxModel(doc: Document, id: string, rect: OverlayRect): BoxModel |
 }
 
 function queryGridLines(doc: Document, id: string, rect: OverlayRect): GridLines | null {
-  const el = doc.querySelector(`[data-qid="${CSS.escape(id)}"]`)
-  if (!(el instanceof HTMLElement)) return null
+  const el = asHtmlElement(doc.querySelector(`[data-qid="${CSS.escape(id)}"]`))
+  if (!el) return null
   const style = getComputedStyle(el)
   if (style.display !== 'grid' && style.display !== 'inline-grid') return null
   const lines = gridOverlayLines(
@@ -211,12 +212,16 @@ export function Canvas() {
     const iframe = iframeRef.current
     if (!iframe) return
 
-    const onLoad = () => {
+    const syncAll = () => {
       syncHeight()
       syncOverlay()
       syncHover()
       syncEmpty()
       syncDrop()
+    }
+    const onLoad = () => {
+      syncAll()
+      requestAnimationFrame(syncAll)
     }
     iframe.addEventListener('load', onLoad)
     onLoad()
@@ -321,7 +326,7 @@ export function Canvas() {
         />
         {preview ? null : (
         <div
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0 z-[5]"
           data-overlay="selection"
           aria-hidden="true"
         >

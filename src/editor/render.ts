@@ -180,6 +180,8 @@ export function renderCss(project: Project): string {
 
 const EDITOR_SCRIPT = `<script>
 (function () {
+  document.documentElement.style.userSelect = 'none';
+  document.documentElement.style.webkitUserSelect = 'none';
   document.addEventListener('click', function (event) {
     event.preventDefault();
     event.stopPropagation();
@@ -269,6 +271,10 @@ export function renderPageHtml(
   const title = page?.name || project.name
   const resolveLinks = mode === 'export'
   const frameScript = mode === 'editor' ? EDITOR_SCRIPT : mode === 'preview' ? PREVIEW_SCRIPT : ''
+  const editorChrome =
+    mode === 'editor'
+      ? '\nhtml, body { user-select: none; -webkit-user-select: none; cursor: default; }'
+      : ''
   return `<!DOCTYPE html>
 <html lang="ar" dir="${project.theme.direction}">
 <head>
@@ -276,7 +282,7 @@ export function renderPageHtml(
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${escapeHtml(title)}</title>
 <style>
-${renderCss(project)}
+${renderCss(project)}${editorChrome}
 </style>
 </head>
 <body>

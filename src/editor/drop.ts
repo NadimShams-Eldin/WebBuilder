@@ -1,3 +1,4 @@
+import { asHtmlElement } from './canvasGuides.ts'
 import { isContainerType } from './createNode.ts'
 import type { DropIntent, DropPlacement } from './tree.ts'
 import { NODE_TYPES, type NodeType } from './types.ts'
@@ -58,8 +59,9 @@ export function hitTestCanvas(
   rootId: string,
 ): DropIntent {
   const raw = doc.elementFromPoint(x, y)
-  const el = raw && 'closest' in raw ? raw.closest('[data-qid]') : null
-  if (!(el instanceof HTMLElement)) {
+  const closest = raw && 'closest' in raw ? raw.closest('[data-qid]') : null
+  const el = asHtmlElement(closest)
+  if (!el) {
     return { targetId: rootId, placement: 'inside', axis: 'vertical', rtl: true }
   }
 
@@ -69,8 +71,8 @@ export function hitTestCanvas(
     return { targetId: rootId, placement: 'inside', axis: 'vertical', rtl: true }
   }
 
-  const parentEl = el.parentElement?.closest('[data-qid]')
-  const parentStyle = parentEl instanceof HTMLElement ? getComputedStyle(parentEl) : null
+  const parentEl = asHtmlElement(el.parentElement?.closest('[data-qid]'))
+  const parentStyle = parentEl ? getComputedStyle(parentEl) : null
   const axis = parentStyle ? axisFromComputed(parentStyle) : 'vertical'
   const rtl = (parentStyle ?? getComputedStyle(el)).direction !== 'ltr'
   const rect = el.getBoundingClientRect()

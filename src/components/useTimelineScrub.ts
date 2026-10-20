@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { asHtmlElement } from '../editor/canvasGuides.ts'
 import { selectActivePage, useEditorStore } from '../editor/store.ts'
 import { collectTimelineTracks, scrubStyle } from '../editor/timeline.ts'
 import type { NodeAnimation } from '../editor/types.ts'
@@ -33,8 +34,8 @@ export function useTimelineScrub(iframe: HTMLIFrameElement | null) {
       const tracks = collectTimelineTracks(page.root)
       const active = open && workspace !== 'preview'
       for (const track of tracks) {
-        const el = doc.querySelector(`[data-qid="${CSS.escape(track.id)}"]`)
-        if (!(el instanceof HTMLElement)) continue
+        const el = asHtmlElement(doc.querySelector(`[data-qid="${CSS.escape(track.id)}"]`))
+        if (!el) continue
         if (!active) {
           clearScrub(el)
           continue

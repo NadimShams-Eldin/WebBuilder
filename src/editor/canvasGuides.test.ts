@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   addTrackTemplate,
+  asHtmlElement,
   collectEmptyContainerIds,
   distanceBetween,
   floatingMenuPosition,
@@ -137,6 +138,20 @@ describe('measureSegments', () => {
     const a = { top: 0, left: 0, width: 100, height: 100 }
     const b = { top: 20, left: 20, width: 10, height: 10 }
     assert.deepEqual(measureSegments(a, b), [])
+  })
+})
+
+describe('asHtmlElement', () => {
+  it('accepts element-like nodes without relying on instanceof', () => {
+    const fake = {
+      nodeType: 1,
+      getBoundingClientRect() {
+        return { top: 0, left: 0, width: 10, height: 10 }
+      },
+    }
+    assert.equal(asHtmlElement(fake), fake)
+    assert.equal(asHtmlElement(null), null)
+    assert.equal(asHtmlElement({ nodeType: 3, getBoundingClientRect() {} }), null)
   })
 })
 

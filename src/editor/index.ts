@@ -74,6 +74,7 @@ export {
   type ExtractedPropKey,
 } from './extractedContent.ts'
 export {
+  asHtmlElement,
   collectEmptyContainerIds,
   floatingMenuPosition,
   gridOverlayLines,
