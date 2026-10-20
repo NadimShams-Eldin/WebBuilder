@@ -39,6 +39,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
   const setDensity = useEditorStore((s) => s.setDensity)
   const project = useEditorStore((s) => s.project)
   const insertComponent = useEditorStore((s) => s.insertComponent)
+  const insertAsset = useEditorStore((s) => s.insertAsset)
   const createComponentFromSelected = useEditorStore((s) => s.createComponentFromSelected)
   const setRightTab = useEditorStore((s) => s.setRightTab)
   const setLeftTab = useEditorStore((s) => s.setLeftTab)
@@ -102,6 +103,16 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         run: () => {
           setPanelVisible('left', true)
           setLeftTab('interactions')
+        },
+      },
+      {
+        id: 'view:assets',
+        label: t('command.openAssets'),
+        group: t('palette.group.view'),
+        keywords: ['assets', 'images', 'library', 'أصول'],
+        run: () => {
+          setPanelVisible('right', true)
+          setRightTab('assets')
         },
       },
       {
@@ -198,6 +209,14 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
       })),
     ]
 
+    const assetCommands: Command[] = project.assets.map((asset) => ({
+      id: `asset:insert:${asset.id}`,
+      label: `${t('assets.insert')}: ${asset.name}`,
+      group: t('palette.group.assets'),
+      keywords: ['asset', 'image', asset.name, 'أصل'],
+      run: () => insertAsset(asset.id),
+    }))
+
     return [
       ...insertCommands,
       ...viewCommands,
@@ -205,15 +224,18 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
       ...projectCommands,
       ...workspaceCommands,
       ...componentCommands,
+      ...assetCommands,
     ].map((command) => ({ ...command, run: () => (command.run(), onClose()) }))
   }, [
     addBlock,
     addPage,
     applyWorkspace,
     createComponentFromSelected,
+    insertAsset,
     insertComponent,
     io,
     onClose,
+    project.assets,
     project.components,
     saveCustomWorkspace,
     setDensity,

@@ -28,6 +28,7 @@
           "gap": "1.5rem"
         },
         "animation": null,
+        "interactions": [],
         "children": [
           {
             "id": "n_b",
@@ -48,6 +49,7 @@
               "borderRadius": "0.875rem"
             },
             "animation": null,
+            "interactions": [],
             "children": [
               {
                 "id": "n_5",
@@ -64,6 +66,7 @@
                   "width": "auto"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_3",
@@ -87,6 +90,7 @@
                       "fontWeight": 700
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -105,6 +109,7 @@
                       "color": "#0f172a"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -124,6 +129,7 @@
                   "width": "auto"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_7",
@@ -142,6 +148,7 @@
                       "alignSelf": "center"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -161,6 +168,7 @@
                       "alignSelf": "center"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -180,6 +188,7 @@
                       "alignSelf": "center"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -206,6 +215,7 @@
                   "fontWeight": 600
                 },
                 "animation": null,
+                "interactions": [],
                 "children": []
               }
             ]
@@ -229,6 +239,7 @@
               "border": "1px solid #e2e8f0"
             },
             "animation": null,
+            "interactions": [],
             "children": [
               {
                 "id": "n_h",
@@ -247,6 +258,7 @@
                   "minWidth": "18rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_c",
@@ -270,10 +282,21 @@
                       "duration": 0.7,
                       "easing": "ease-out",
                       "keyframes": [
-                        { "at": 0, "opacity": 0, "y": 16, "scale": 1 },
-                        { "at": 1, "opacity": 1, "y": 0, "scale": 1 }
+                        {
+                          "at": 0,
+                          "opacity": 0,
+                          "y": 16,
+                          "scale": 1
+                        },
+                        {
+                          "at": 1,
+                          "opacity": 1,
+                          "y": 0,
+                          "scale": 1
+                        }
                       ]
                     },
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -291,6 +314,7 @@
                       "maxWidth": "34rem"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -308,6 +332,7 @@
                       "width": "auto"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": [
                       {
                         "id": "n_e",
@@ -337,12 +362,27 @@
                           "duration": 0.55,
                           "easing": "ease-out",
                           "keyframes": [
-                            { "at": 0, "opacity": 0, "y": 24, "scale": 1 },
-                            { "at": 1, "opacity": 1, "y": 0, "scale": 1 }
+                            {
+                              "at": 0,
+                              "opacity": 0,
+                              "y": 24,
+                              "scale": 1
+                            },
+                            {
+                              "at": 1,
+                              "opacity": 1,
+                              "y": 0,
+                              "scale": 1
+                            }
                           ]
                         },
                         "interactions": [
-                          { "id": "ix_demo_hero", "event": "click", "action": "restart", "targetId": "n_c" }
+                          {
+                            "id": "ix_demo_hero",
+                            "event": "click",
+                            "action": "restart",
+                            "targetId": "n_c"
+                          }
                         ],
                         "children": []
                       },
@@ -362,6 +402,7 @@
                           "fontWeight": 600
                         },
                         "animation": null,
+                        "interactions": [],
                         "children": []
                       }
                     ]
@@ -373,7 +414,7 @@
                 "type": "image",
                 "name": "لوحة بصرية",
                 "props": {
-                  "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgODAwIDYwMCI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFlMjkzYiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI1NjNlYiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImNhcmQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmZmZmIiBzdG9wLW9wYWNpdHk9IjAuOTUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNkYmVhZmUiIHN0b3Atb3BhY2l0eT0iMC44Ii8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI2MDAiIHJ4PSIzMiIgZmlsbD0idXJsKCNiZykiLz4KPGNpcmNsZSBjeD0iNjQwIiBjeT0iMTIwIiByPSIxODAiIGZpbGw9IiM2MGE1ZmEiIG9wYWNpdHk9IjAuMjUiLz4KPGNpcmNsZSBjeD0iMTQwIiBjeT0iNTIwIiByPSIyMDAiIGZpbGw9IiMwZWE1ZTkiIG9wYWNpdHk9IjAuMiIvPgo8cmVjdCB4PSI5MCIgeT0iMTEwIiB3aWR0aD0iNjIwIiBoZWlnaHQ9IjM4MCIgcng9IjI0IiBmaWxsPSJ1cmwoI2NhcmQpIi8+CjxyZWN0IHg9IjEzMCIgeT0iMTYwIiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjIwIiByeD0iMTAiIGZpbGw9IiMxZTI5M2IiIG9wYWNpdHk9IjAuODUiLz4KPHJlY3QgeD0iMTMwIiB5PSIyMDAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMTIiIHJ4PSI2IiBmaWxsPSIjMzM0MTU1IiBvcGFjaXR5PSIwLjM1Ii8+CjxyZWN0IHg9IjEzMCIgeT0iMjI0IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjEyIiByeD0iNiIgZmlsbD0iIzMzNDE1NSIgb3BhY2l0eT0iMC4yNSIvPgo8cmVjdCB4PSIxMzAiIHk9IjI4MCIgd2lkdGg9IjE1MCIgaGVpZ2h0PSI0NCIgcng9IjEyIiBmaWxsPSIjMjU2M2ViIi8+CjxyZWN0IHg9IjMwMCIgeT0iMjgwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQ0IiByeD0iMTIiIGZpbGw9IiNlMmU4ZjAiLz4KPHJlY3QgeD0iMTMwIiB5PSIzNjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iOTAiIHJ4PSIxNiIgZmlsbD0iI2JmZGJmZSIvPgo8cmVjdCB4PSIzMDUiIHk9IjM2MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI5MCIgcng9IjE2IiBmaWxsPSIjZGJlYWZlIi8+CjxyZWN0IHg9IjQ4MCIgeT0iMzYwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjkwIiByeD0iMTYiIGZpbGw9IiNlZmY2ZmYiLz4KPC9zdmc+",
+                  "src": "asset:a_hero",
                   "alt": "لوحة تجريبية بألوان المشروع"
                 },
                 "style": {
@@ -386,6 +427,7 @@
                   "flex": "1 1 20rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": []
               }
             ]
@@ -406,6 +448,7 @@
               "color": "#0f172a"
             },
             "animation": null,
+            "interactions": [],
             "children": []
           },
           {
@@ -422,6 +465,7 @@
               "color": "#64748b"
             },
             "animation": null,
+            "interactions": [],
             "children": []
           },
           {
@@ -436,6 +480,7 @@
               "width": "100%"
             },
             "animation": null,
+            "interactions": [],
             "children": [
               {
                 "id": "n_1w",
@@ -456,6 +501,7 @@
                   "borderRadius": "0.75rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_1x",
@@ -473,9 +519,10 @@
                       "color": "#0f172a"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": [],
-                    "originId": "n_1u",
-                    "componentId": "cmp_1s"
+                    "componentId": "cmp_1s",
+                    "originId": "n_1u"
                   },
                   {
                     "id": "n_1y",
@@ -491,13 +538,14 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": [],
-                    "originId": "n_1v",
-                    "componentId": "cmp_1s"
+                    "componentId": "cmp_1s",
+                    "originId": "n_1v"
                   }
                 ],
-                "originId": "cmp_1s",
-                "componentId": "cmp_1s"
+                "componentId": "cmp_1s",
+                "originId": "cmp_1s"
               },
               {
                 "id": "n_q",
@@ -518,6 +566,7 @@
                   "borderRadius": "0.75rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_r",
@@ -535,6 +584,7 @@
                       "color": "#0f172a"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -551,6 +601,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -574,6 +625,7 @@
                   "borderRadius": "0.75rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_u",
@@ -591,6 +643,7 @@
                       "color": "#0f172a"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -607,6 +660,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -628,6 +682,7 @@
               "width": "100%"
             },
             "animation": null,
+            "interactions": [],
             "children": [
               {
                 "id": "n_x",
@@ -650,6 +705,7 @@
                   "flex": "1 1 9rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_y",
@@ -667,6 +723,7 @@
                       "color": "#2563eb"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -683,6 +740,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -708,6 +766,7 @@
                   "flex": "1 1 9rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_11",
@@ -725,6 +784,7 @@
                       "color": "#2563eb"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -741,6 +801,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -766,6 +827,7 @@
                   "flex": "1 1 9rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_14",
@@ -783,6 +845,7 @@
                       "color": "#2563eb"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -799,6 +862,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -824,6 +888,7 @@
               "border": "1px solid #bfdbfe"
             },
             "animation": null,
+            "interactions": [],
             "children": [
               {
                 "id": "n_1b",
@@ -841,6 +906,7 @@
                   "flex": "1 1 20rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_1c",
@@ -858,6 +924,7 @@
                       "color": "#0f172a"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -874,6 +941,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -898,6 +966,7 @@
                   "borderRadius": "0.75rem"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_19",
@@ -915,6 +984,7 @@
                       "color": "#171717"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -931,6 +1001,7 @@
                       "color": "#64748b"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -953,6 +1024,7 @@
                       "boxSizing": "border-box"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -978,6 +1050,7 @@
                       "width": "100%"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -996,6 +1069,7 @@
               "border": "none"
             },
             "animation": null,
+            "interactions": [],
             "children": []
           },
           {
@@ -1014,6 +1088,7 @@
               "paddingBlock": "0.5rem"
             },
             "animation": null,
+            "interactions": [],
             "children": [
               {
                 "id": "n_1f",
@@ -1029,6 +1104,7 @@
                   "color": "#64748b"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": []
               },
               {
@@ -1046,6 +1122,7 @@
                   "width": "auto"
                 },
                 "animation": null,
+                "interactions": [],
                 "children": [
                   {
                     "id": "n_1h",
@@ -1064,6 +1141,7 @@
                       "alignSelf": "center"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   },
                   {
@@ -1083,6 +1161,7 @@
                       "alignSelf": "center"
                     },
                     "animation": null,
+                    "interactions": [],
                     "children": []
                   }
                 ]
@@ -1112,6 +1191,7 @@
           "gap": "1.5rem"
         },
         "animation": null,
+        "interactions": [],
         "children": [
           {
             "id": "n_1m",
@@ -1129,6 +1209,7 @@
               "color": "#0f172a"
             },
             "animation": null,
+            "interactions": [],
             "children": []
           },
           {
@@ -1146,6 +1227,7 @@
               "maxWidth": "40rem"
             },
             "animation": null,
+            "interactions": [],
             "children": []
           },
           {
@@ -1168,6 +1250,7 @@
               "color": "#334155"
             },
             "animation": null,
+            "interactions": [],
             "children": []
           },
           {
@@ -1185,13 +1268,21 @@
               "fontWeight": 600
             },
             "animation": null,
+            "interactions": [],
             "children": []
           }
         ]
       }
     }
   ],
-  "assets": [],
+  "assets": [
+    {
+      "id": "a_hero",
+      "name": "لوحة البطل",
+      "mimeType": "image/svg+xml",
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgODAwIDYwMCI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzFlMjkzYiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI1NjNlYiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImNhcmQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmZmZmIiBzdG9wLW9wYWNpdHk9IjAuOTUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNkYmVhZmUiIHN0b3Atb3BhY2l0eT0iMC44Ii8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI2MDAiIHJ4PSIzMiIgZmlsbD0idXJsKCNiZykiLz4KPGNpcmNsZSBjeD0iNjQwIiBjeT0iMTIwIiByPSIxODAiIGZpbGw9IiM2MGE1ZmEiIG9wYWNpdHk9IjAuMjUiLz4KPGNpcmNsZSBjeD0iMTQwIiBjeT0iNTIwIiByPSIyMDAiIGZpbGw9IiMwZWE1ZTkiIG9wYWNpdHk9IjAuMiIvPgo8cmVjdCB4PSI5MCIgeT0iMTEwIiB3aWR0aD0iNjIwIiBoZWlnaHQ9IjM4MCIgcng9IjI0IiBmaWxsPSJ1cmwoI2NhcmQpIi8+CjxyZWN0IHg9IjEzMCIgeT0iMTYwIiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjIwIiByeD0iMTAiIGZpbGw9IiMxZTI5M2IiIG9wYWNpdHk9IjAuODUiLz4KPHJlY3QgeD0iMTMwIiB5PSIyMDAiIHdpZHRoPSIzNjAiIGhlaWdodD0iMTIiIHJ4PSI2IiBmaWxsPSIjMzM0MTU1IiBvcGFjaXR5PSIwLjM1Ii8+CjxyZWN0IHg9IjEzMCIgeT0iMjI0IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjEyIiByeD0iNiIgZmlsbD0iIzMzNDE1NSIgb3BhY2l0eT0iMC4yNSIvPgo8cmVjdCB4PSIxMzAiIHk9IjI4MCIgd2lkdGg9IjE1MCIgaGVpZ2h0PSI0NCIgcng9IjEyIiBmaWxsPSIjMjU2M2ViIi8+CjxyZWN0IHg9IjMwMCIgeT0iMjgwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQ0IiByeD0iMTIiIGZpbGw9IiNlMmU4ZjAiLz4KPHJlY3QgeD0iMTMwIiB5PSIzNjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iOTAiIHJ4PSIxNiIgZmlsbD0iI2JmZGJmZSIvPgo8cmVjdCB4PSIzMDUiIHk9IjM2MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI5MCIgcng9IjE2IiBmaWxsPSIjZGJlYWZlIi8+CjxyZWN0IHg9IjQ4MCIgeT0iMzYwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjkwIiByeD0iMTYiIGZpbGw9IiNlZmY2ZmYiLz4KPC9zdmc+"
+    }
+  ],
   "components": [
     {
       "id": "cmp_1s",
@@ -1215,6 +1306,7 @@
           "borderRadius": "0.75rem"
         },
         "animation": null,
+        "interactions": [],
         "children": [
           {
             "id": "n_1u",
@@ -1232,9 +1324,10 @@
               "color": "#0f172a"
             },
             "animation": null,
+            "interactions": [],
             "children": [],
-            "originId": "n_1u",
-            "componentId": "cmp_1s"
+            "componentId": "cmp_1s",
+            "originId": "n_1u"
           },
           {
             "id": "n_1v",
@@ -1250,13 +1343,14 @@
               "color": "#64748b"
             },
             "animation": null,
+            "interactions": [],
             "children": [],
-            "originId": "n_1v",
-            "componentId": "cmp_1s"
+            "componentId": "cmp_1s",
+            "originId": "n_1v"
           }
         ],
-        "originId": "cmp_1s",
-        "componentId": "cmp_1s"
+        "componentId": "cmp_1s",
+        "originId": "cmp_1s"
       }
     }
   ]

@@ -51,6 +51,7 @@ export function MenuBar() {
   const timelineOpen = useEditorStore((s) => s.timelineOpen)
   const toggleTimeline = useEditorStore((s) => s.toggleTimeline)
   const setLeftTab = useEditorStore((s) => s.setLeftTab)
+  const setRightTab = useEditorStore((s) => s.setRightTab)
   const setPanelVisible = useEditorStore((s) => s.setPanelVisible)
   const resetLayout = useEditorStore((s) => s.resetLayout)
   const workspace = useEditorStore((s) => s.workspace)
@@ -177,6 +178,14 @@ export function MenuBar() {
           onSelect: () => {
             setPanelVisible('left', true)
             setLeftTab('interactions')
+          },
+        },
+        {
+          kind: 'action',
+          label: t('command.openAssets'),
+          onSelect: () => {
+            setPanelVisible('right', true)
+            setRightTab('assets')
           },
         },
       ],

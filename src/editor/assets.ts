@@ -1,5 +1,7 @@
-import { createId } from './createNode.ts'
-import type { Asset, Project } from './types.ts'
+import { createId, createNode } from './createNode.ts'
+import { resolvePage } from './pages.ts'
+import { insertChild, resolveInsertTarget } from './tree.ts'
+import type { Asset, Node, Project } from './types.ts'
 
 export const ASSET_PREFIX = 'asset:'
 export const MAX_ASSET_BYTES = 1_500_000
@@ -53,10 +55,148 @@ export function addAssetToProject(project: Project, asset: Omit<Asset, 'id'> & {
   return { ...project, assets: [...project.assets, next] }
 }
 
-export function removeAssetFromProject(project: Project, assetId: string): Project {
+const MEDIA_KEYS = ['src', 'poster'] as const
+
+export type AssetUsage = {
+  pageId: string
+  nodeId: string
+  field: (typeof MEDIA_KEYS)[number]
+}
+
+function mapTree(node: Node, mapper: (item: Node) => Node): Node {
+  const next = mapper(node)
+  const children = next.children.map((child) => mapTree(child, mapper))
+  const sameChildren = children.every((child, index) => child === next.children[index])
+  if (next === node && sameChildren) return node
+  return { ...next, children }
+}
+
+function mapProjectTrees(project: Project, mapper: (node: Node) => Node): Project {
   return {
     ...project,
-    assets: project.assets.filter((asset) => asset.id !== assetId),
+    pages: project.pages.map((page) => ({ ...page, root: mapTree(page.root, mapper) })),
+    components: project.components.map((component) => ({
+      ...component,
+      root: mapTree(component.root, mapper),
+    })),
+  }
+}
+
+function clearAssetProps(node: Node, assetId: string): Node {
+  let changed = false
+  const props = { ...node.props }
+  for (const key of MEDIA_KEYS) {
+    if (parseAssetHref(props[key]) === assetId) {
+      props[key] = ''
+      changed = true
+    }
+  }
+  return changed ? { ...node, props } : node
+}
+
+export function uniqueAssetName(project: Project, desired: string, excludeId?: string): string {
+  const base = desired.trim() || 'أصل'
+  const taken = new Set(
+    project.assets.filter((item) => item.id !== excludeId).map((item) => item.name),
+  )
+  if (!taken.has(base)) return base
+  let index = 2
+  while (taken.has(`${base} ${index}`)) index += 1
+  return `${base} ${index}`
+}
+
+export function renameAssetInProject(
+  project: Project,
+  assetId: string,
+  name: string,
+): Project | null {
+  if (!project.assets.some((asset) => asset.id === assetId)) return null
+  const nextName = uniqueAssetName(project, name, assetId)
+  return {
+    ...project,
+    assets: project.assets.map((asset) =>
+      asset.id === assetId ? { ...asset, name: nextName } : asset,
+    ),
+  }
+}
+
+export function replaceAssetInProject(
+  project: Project,
+  assetId: string,
+  patch: { name?: string; mimeType?: string; src?: string },
+): Project | null {
+  if (!project.assets.some((asset) => asset.id === assetId)) return null
+  return {
+    ...project,
+    assets: project.assets.map((asset) => {
+      if (asset.id !== assetId) return asset
+      return {
+        ...asset,
+        name: patch.name !== undefined ? uniqueAssetName(project, patch.name, assetId) : asset.name,
+        mimeType: patch.mimeType ?? asset.mimeType,
+        src: patch.src ?? asset.src,
+      }
+    }),
+  }
+}
+
+export function collectAssetUsages(project: Project, assetId: string): AssetUsage[] {
+  const items: AssetUsage[] = []
+  const walk = (pageId: string, node: Node) => {
+    for (const field of MEDIA_KEYS) {
+      if (parseAssetHref(node.props[field]) === assetId) {
+        items.push({ pageId, nodeId: node.id, field })
+      }
+    }
+    for (const child of node.children) walk(pageId, child)
+  }
+  for (const page of project.pages) walk(page.id, page.root)
+  return items
+}
+
+export function countAssetUsages(project: Project, assetId: string): number {
+  return collectAssetUsages(project, assetId).length
+}
+
+export function filterAssets(assets: Asset[], query: string): Asset[] {
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return assets
+  return assets.filter((asset) => {
+    const haystack = `${asset.name} ${asset.mimeType}`.toLowerCase()
+    return tokens.every((token) => haystack.includes(token))
+  })
+}
+
+export function insertAssetImage(
+  project: Project,
+  assetId: string,
+  selectedId: string | null,
+  pageId?: string | null,
+): { project: Project; node: Node } | null {
+  const asset = findAsset(project, assetId)
+  const page = resolvePage(project, pageId)
+  if (!asset || !page) return null
+  const target = resolveInsertTarget(page.root, selectedId)
+  if (!target) return null
+  const node = createNode('image')
+  node.props = { ...node.props, src: assetHref(asset.id), alt: asset.name }
+  const root = insertChild(page.root, target.parentId, node, target.index)
+  if (!root) return null
+  return {
+    project: {
+      ...project,
+      pages: project.pages.map((item) => (item.id === page.id ? { ...item, root } : item)),
+    },
+    node,
+  }
+}
+
+export function removeAssetFromProject(project: Project, assetId: string): Project {
+  if (!project.assets.some((asset) => asset.id === assetId)) return project
+  const unbound = mapProjectTrees(project, (node) => clearAssetProps(node, assetId))
+  return {
+    ...unbound,
+    assets: unbound.assets.filter((asset) => asset.id !== assetId),
   }
 }
 

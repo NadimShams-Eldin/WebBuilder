@@ -3,6 +3,7 @@ import { BLOCK_GROUPS, type BlockDef } from '../blocks/registry.ts'
 import { blockDragId } from '../editor/dnd.ts'
 import { selectActivePage, useEditorStore, type RightTab } from '../editor/store.ts'
 import { useI18n } from '../editor/useI18n.ts'
+import { AssetLibrary } from './AssetLibrary'
 import { ComponentLibrary } from './ComponentLibrary'
 import { ExtractedContent } from './ExtractedContent'
 import { LayerTree } from './LayerTree'
@@ -49,7 +50,7 @@ export function RightPanel() {
       style={{ width }}
       className="q-panel flex h-full shrink-0 flex-col border-l border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
     >
-      <div className="flex items-center gap-1 border-b border-neutral-200 p-2 text-sm dark:border-neutral-800">
+      <div className="flex flex-wrap items-center gap-1 border-b border-neutral-200 p-2 text-sm dark:border-neutral-800">
         <button type="button" onClick={() => setTab('blocks')} className={tabClass('blocks')}>
           {t('tabs.blocks')}
         </button>
@@ -61,6 +62,9 @@ export function RightPanel() {
         </button>
         <button type="button" onClick={() => setTab('components')} className={tabClass('components')}>
           {t('tabs.components')}
+        </button>
+        <button type="button" onClick={() => setTab('assets')} className={tabClass('assets')}>
+          {t('tabs.assets')}
         </button>
       </div>
 
@@ -88,6 +92,10 @@ export function RightPanel() {
               </section>
             ))}
           </>
+        ) : tab === 'components' ? (
+          <ComponentLibrary />
+        ) : tab === 'assets' ? (
+          <AssetLibrary />
         ) : !page ? (
           <p className="text-xs text-neutral-400">{t('panel.noPage')}</p>
         ) : tab === 'outline' ? (
@@ -97,8 +105,6 @@ export function RightPanel() {
             dropPreview={dropPreview}
             onSelect={setSelectedId}
           />
-        ) : tab === 'components' ? (
-          <ComponentLibrary />
         ) : (
           <ExtractedContent root={page.root} />
         )}

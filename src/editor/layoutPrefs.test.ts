@@ -35,14 +35,14 @@ describe('layout prefs', () => {
         panels: { left: false, right: 'yes' },
         gridOverlay: true,
         leftTab: 'interactions',
-        rightTab: 'nope',
+        rightTab: 'assets',
       }),
     )
     assert.equal(parsed.panels.left, false)
     assert.equal(parsed.panels.right, DEFAULT_LAYOUT.panels.right)
     assert.equal(parsed.gridOverlay, true)
     assert.equal(parsed.leftTab, 'interactions')
-    assert.equal(parsed.rightTab, DEFAULT_LAYOUT.rightTab)
+    assert.equal(parsed.rightTab, 'assets')
   })
 
   it('clamps panel widths within bounds', () => {

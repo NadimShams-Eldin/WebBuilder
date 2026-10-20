@@ -5,7 +5,14 @@ import {
   type EditorTheme,
   type Locale,
 } from './chromePrefs.ts'
-import { addAssetToProject, readFileAsAsset, removeAssetFromProject } from './assets.ts'
+import {
+  addAssetToProject,
+  insertAssetImage,
+  readFileAsAsset,
+  removeAssetFromProject,
+  renameAssetInProject,
+  replaceAssetInProject,
+} from './assets.ts'
 import { createDemoProject } from './demoProject.ts'
 import { isDemoRequest } from './demoMode.ts'
 import {
@@ -177,6 +184,9 @@ export type EditorState = {
   exportSiteZip: () => Promise<boolean>
   addAsset: (file: File) => Promise<Asset | null>
   removeAsset: (assetId: string) => boolean
+  renameAsset: (assetId: string, name: string) => boolean
+  replaceAsset: (assetId: string, file: File) => Promise<boolean>
+  insertAsset: (assetId: string) => boolean
   undo: () => boolean
   redo: () => boolean
 }
@@ -738,6 +748,42 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const { project } = get()
       if (!project.assets.some((asset) => asset.id === assetId)) return false
       commit({ project: removeAssetFromProject(project, assetId) })
+      return true
+    },
+    renameAsset: (assetId, name) => {
+      const { project } = get()
+      const next = renameAssetInProject(project, assetId, name)
+      if (!next) return false
+      commit({ project: next })
+      return true
+    },
+    replaceAsset: async (assetId, file) => {
+      const { project, locale } = get()
+      const result = await readFileAsAsset(file)
+      if (!result.ok) {
+        set({ lastInsertError: translate(locale, `error.asset.${result.error}`) })
+        return false
+      }
+      const next = replaceAssetInProject(project, assetId, {
+        mimeType: result.asset.mimeType,
+        src: result.asset.src,
+      })
+      if (!next) return false
+      commit({ project: next, lastInsertError: null })
+      return true
+    },
+    insertAsset: (assetId) => {
+      const { project, selectedId, activePageId, locale } = get()
+      const result = insertAssetImage(project, assetId, selectedId, activePageId)
+      if (!result) {
+        set({ lastInsertError: translate(locale, 'error.insert') })
+        return false
+      }
+      commit({
+        project: result.project,
+        selectedId: result.node.id,
+        lastInsertError: null,
+      })
       return true
     },
     undo: () => {

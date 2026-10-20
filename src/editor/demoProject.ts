@@ -1,3 +1,4 @@
+import { addAssetToProject, assetHref } from './assets.ts'
 import { createComponentFromNode } from './components.ts'
 import { createId, createNode } from './createNode.ts'
 import { DEFAULT_THEME } from './createProject.ts'
@@ -275,9 +276,10 @@ export function createDemoProject(): Project {
     children: [heroHeading, heroText, heroActions],
   })
 
+  const heroAssetId = 'a_hero'
   const heroArt = apply(createNode('image'), {
     name: 'لوحة بصرية',
-    props: { src: HERO_ART, alt: 'لوحة تجريبية بألوان المشروع' },
+    props: { src: assetHref(heroAssetId), alt: 'لوحة تجريبية بألوان المشروع' },
     style: {
       display: 'block',
       width: '100%',
@@ -573,7 +575,13 @@ export function createDemoProject(): Project {
     components: [],
   }
 
+  const withAsset = addAssetToProject(project, {
+    id: heroAssetId,
+    name: 'لوحة البطل',
+    mimeType: 'image/svg+xml',
+    src: HERO_ART,
+  })
   const firstCard = features.children[0]
-  const saved = createComponentFromNode(project, firstCard.id, homePageId, 'بطاقة ميزة')
-  return saved?.project ?? project
+  const saved = createComponentFromNode(withAsset, firstCard.id, homePageId, 'بطاقة ميزة')
+  return saved?.project ?? withAsset
 }

@@ -150,11 +150,19 @@ export {
 export {
   addAssetToProject,
   assetHref,
+  collectAssetUsages,
+  countAssetUsages,
+  filterAssets,
   findAsset,
+  insertAssetImage,
   isAssetHref,
   parseAssetHref,
   removeAssetFromProject,
+  renameAssetInProject,
+  replaceAssetInProject,
   resolveMediaSrc,
+  uniqueAssetName,
+  type AssetUsage,
 } from './assets.ts'
 export {
   loadPersistedSession,

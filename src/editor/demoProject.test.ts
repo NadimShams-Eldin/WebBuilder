@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { assetHref } from './assets.ts'
 import { createDemoProject } from './demoProject.ts'
 import { collectProjectInteractions } from './interactions.ts'
 import { internalHref } from './pages.ts'
@@ -44,5 +45,14 @@ describe('demo project', () => {
     assert.equal(items[0].interaction.action, 'restart')
     assert.ok(items[0].interaction.targetId)
     assert.ok(renderHtml(project.pages[0].root).includes('data-qix='))
+  })
+
+  it('seeds a library asset used by the hero image', () => {
+    const project = createDemoProject()
+    assert.equal(project.assets.length, 1)
+    assert.equal(project.assets[0].name, 'لوحة البطل')
+    const html = renderHtml(project.pages[0].root, project)
+    assert.equal(html.includes(assetHref(project.assets[0].id)), false)
+    assert.ok(html.includes('data:image/svg+xml'))
   })
 })
