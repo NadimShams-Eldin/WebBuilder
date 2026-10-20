@@ -82,6 +82,13 @@ export {
   type GuideRect,
 } from './canvasGuides.ts'
 export {
+  boxModelFromRect,
+  formatBoxSize,
+  readBoxSides,
+  ringStrips,
+  type BoxModel,
+} from './boxModel.ts'
+export {
   DEFAULT_LAYOUT,
   LAYOUT_STORAGE_KEY,
   LEFT_TABS,

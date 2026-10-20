@@ -144,7 +144,7 @@ describe('floatingMenuPosition', () => {
   it('places the menu at the start edge and above when there is room', () => {
     const rtl = floatingMenuPosition({ top: 40, left: 20, width: 200, height: 80 }, 400, true)
     assert.equal(rtl.top, 8)
-    assert.equal(rtl.left, 52)
+    assert.equal(rtl.left, 0)
     const ltr = floatingMenuPosition({ top: 0, left: 10, width: 80, height: 40 }, 400, false)
     assert.equal(ltr.top, 4)
     assert.equal(ltr.left, 10)

@@ -1,6 +1,12 @@
 import { useDndContext } from '@dnd-kit/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  boxModelFromRect,
+  formatBoxSize,
+  readBoxSides,
+  type BoxModel,
+} from '../editor/boxModel.ts'
+import {
   collectEmptyContainerIds,
   gridOverlayLines,
   measureSegments,
@@ -9,8 +15,9 @@ import { registerCanvasIframe } from '../editor/dnd.ts'
 import { indicatorBox, type IndicatorBox } from '../editor/drop.ts'
 import { renderPageHtml } from '../editor/render.ts'
 import { DEVICE_WIDTHS, getActivePage, useEditorStore } from '../editor/store.ts'
-import { findNode } from '../editor/tree.ts'
+import { findNode, findParent } from '../editor/tree.ts'
 import { useI18n } from '../editor/useI18n.ts'
+import { BoxModelOverlay, ParentOutline } from './BoxModelOverlay'
 import { CanvasGuides } from './CanvasGuides'
 import { ContextMenu } from './ContextMenu'
 import { SelectionToolbar } from './SelectionToolbar'
@@ -46,6 +53,20 @@ function queryNodeRect(doc: Document, id: string): OverlayRect | null {
 function parseGap(value: string): number {
   const n = Number.parseFloat(value)
   return Number.isFinite(n) ? n : 0
+}
+
+function queryBoxModel(doc: Document, id: string, rect: OverlayRect): BoxModel | null {
+  const el = doc.querySelector(`[data-qid="${CSS.escape(id)}"]`)
+  if (!(el instanceof HTMLElement)) return null
+  try {
+    return boxModelFromRect(rect, readBoxSides(getComputedStyle(el)))
+  } catch {
+    return boxModelFromRect(rect, {
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      border: { top: 0, right: 0, bottom: 0, left: 0 },
+    })
+  }
 }
 
 function queryGridLines(doc: Document, id: string, rect: OverlayRect): GridLines | null {
@@ -85,6 +106,11 @@ export function Canvas() {
   const dragging = Boolean(active)
   const [frameHeight, setFrameHeight] = useState(720)
   const [overlay, setOverlay] = useState<OverlayRect | null>(null)
+  const [boxModel, setBoxModel] = useState<BoxModel | null>(null)
+  const [parentOverlay, setParentOverlay] = useState<{
+    rect: OverlayRect
+    name: string
+  } | null>(null)
   const [hoverRect, setHoverRect] = useState<OverlayRect | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [emptyRects, setEmptyRects] = useState<OverlayRect[]>([])
@@ -115,13 +141,23 @@ export function Canvas() {
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedId || preview) {
       setOverlay(null)
+      setBoxModel(null)
+      setParentOverlay(null)
       setGridLines(null)
       return
     }
     const rect = queryNodeRect(doc, selectedId)
     setOverlay(rect)
+    setBoxModel(rect ? queryBoxModel(doc, selectedId, rect) : null)
     setGridLines(rect ? queryGridLines(doc, selectedId, rect) : null)
-  }, [selectedId, preview])
+    const parent = page ? findParent(page.root, selectedId) : null
+    if (!parent || parent.id === selectedId) {
+      setParentOverlay(null)
+      return
+    }
+    const parentRect = queryNodeRect(doc, parent.id)
+    setParentOverlay(parentRect ? { rect: parentRect, name: parent.name } : null)
+  }, [selectedId, preview, page])
 
   const activeHoverId = preview || dragging ? null : hoveredId
   const syncHover = useCallback(() => {
@@ -316,6 +352,13 @@ export function Canvas() {
               }}
             />
           ) : null}
+          {showGuides && parentOverlay ? (
+            <ParentOutline
+              rect={parentOverlay.rect}
+              label={parentOverlay.name}
+              size={formatBoxSize(parentOverlay.rect.width, parentOverlay.rect.height)}
+            />
+          ) : null}
           {showGuides && overlay ? (
             <div
               className="absolute border-2 border-blue-500 bg-blue-500/5"
@@ -327,6 +370,9 @@ export function Canvas() {
                 height: overlay.height,
               }}
             />
+          ) : null}
+          {showGuides && overlay && boxModel ? (
+            <BoxModelOverlay model={boxModel} name={selectedNode?.name} />
           ) : null}
           {showGridLines && overlay && gridLines
             ? gridLines.vertical.map((left, index) => (
@@ -427,7 +473,13 @@ export function Canvas() {
               )
             : null}
           {showGuides && overlay && selectedNode && selectedNode.id !== page?.root.id ? (
-            <SelectionToolbar node={selectedNode} rect={overlay} frameWidth={width} rtl={rtl} />
+            <SelectionToolbar
+              node={selectedNode}
+              rect={overlay}
+              frameWidth={width}
+              rtl={rtl}
+              size={formatBoxSize(overlay.width, overlay.height)}
+            />
           ) : null}
           {dropBox ? (
             <div

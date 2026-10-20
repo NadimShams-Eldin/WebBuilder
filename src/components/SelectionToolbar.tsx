@@ -28,11 +28,13 @@ export function SelectionToolbar({
   rect,
   frameWidth,
   rtl,
+  size,
 }: {
   node: Node
   rect: GuideRect
   frameWidth: number
   rtl: boolean
+  size?: string
 }) {
   const { t } = useI18n()
   const duplicateSelected = useEditorStore((s) => s.duplicateSelected)
@@ -58,6 +60,11 @@ export function SelectionToolbar({
       data-guide="menu"
       style={{ top: position.top, left: position.left }}
     >
+      <span className="max-w-28 truncate px-1.5 text-[10px] font-medium text-neutral-700 dark:text-neutral-200">
+        {node.name}
+      </span>
+      {size ? <span className="px-1 text-[10px] text-neutral-400">{size}</span> : null}
+      <span className="mx-0.5 h-4 w-px bg-neutral-200 dark:bg-neutral-700" />
       <button
         type="button"
         className={BUTTON_CLASS}

@@ -214,7 +214,7 @@ export function floatingMenuPosition(
   frameWidth: number,
   rtl = true,
 ): { top: number; left: number } {
-  const menuWidth = 168
+  const menuWidth = 260
   const gap = 4
   const above = rect.top - 28 - gap
   const top = above >= 0 ? above : rect.top + gap
