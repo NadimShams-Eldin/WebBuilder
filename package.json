@@ -8,7 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "node --experimental-strip-types --test src/editor/*.test.ts src/export/*.test.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check": "npm test && npm run lint && tsc -b",
+    "setup": "npm install"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

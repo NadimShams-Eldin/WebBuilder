@@ -41,6 +41,7 @@ import {
 } from './workspaces.ts'
 import { loadPersistedSession, savePersistedSession } from './persist.ts'
 import { parseProjectJson, serializeProject } from './projectJson.ts'
+import { publishProject, type PublishHrefs } from './share.ts'
 import {
   canRedo,
   canUndo,
@@ -106,6 +107,8 @@ export type EditorState = {
   activePageId: string | null
   paletteOpen: boolean
   shortcutsOpen: boolean
+  publishOpen: boolean
+  lastPublish: { siteId: string; hrefs: PublishHrefs } | null
   demoMode: boolean
   device: Device
   zoom: number
@@ -131,6 +134,7 @@ export type EditorState = {
   setActivePage: (pageId: string) => void
   setPaletteOpen: (open: boolean) => void
   setShortcutsOpen: (open: boolean) => void
+  setPublishOpen: (open: boolean) => void
   setDevice: (device: Device) => void
   setZoom: (zoom: number) => void
   setWorkspace: (mode: WorkspaceMode) => void
@@ -182,6 +186,7 @@ export type EditorState = {
   importProjectJson: (raw: string) => boolean
   exportProjectJson: () => string
   exportSiteZip: () => Promise<boolean>
+  publishSite: () => Promise<boolean>
   addAsset: (file: File) => Promise<Asset | null>
   removeAsset: (assetId: string) => boolean
   renameAsset: (assetId: string, name: string) => boolean
@@ -257,6 +262,8 @@ export const useEditorStore = create<EditorState>((set, get) => {
     activePageId: persisted?.activePageId ?? initialProject.pages[0]?.id ?? null,
     paletteOpen: false,
     shortcutsOpen: false,
+    publishOpen: false,
+    lastPublish: null,
     demoMode,
     device: initialViewport.device,
     zoom: initialViewport.zoom,
@@ -291,6 +298,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     },
     setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
     setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
+    setPublishOpen: (publishOpen) => set({ publishOpen }),
     setActivePage: (pageId) => {
       const state = get()
       const page = resolvePage(state.project, pageId)
@@ -729,6 +737,27 @@ export const useEditorStore = create<EditorState>((set, get) => {
         return true
       } catch {
         set({ lastInsertError: translate(locale, 'error.export.failed') })
+        return false
+      }
+    },
+    publishSite: async () => {
+      const { project, locale } = get()
+      const origin = typeof window === 'undefined' ? '' : window.location.origin
+      const pathname = typeof window === 'undefined' ? '/' : window.location.pathname
+      try {
+        const result = await publishProject(project, { origin, pathname })
+        if (!result.ok) {
+          set({ lastInsertError: translate(locale, 'error.publish.quota'), publishOpen: true })
+          return false
+        }
+        set({
+          lastInsertError: null,
+          publishOpen: true,
+          lastPublish: { siteId: result.site.id, hrefs: result.hrefs },
+        })
+        return true
+      } catch {
+        set({ lastInsertError: translate(locale, 'error.publish.failed'), publishOpen: true })
         return false
       }
     },

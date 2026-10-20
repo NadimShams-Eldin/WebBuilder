@@ -8,6 +8,7 @@ import { MenuBar } from './components/MenuBar'
 import { PageTabs } from './components/PageTabs'
 import { PanelCollapseStrip, PanelResizer } from './components/PanelResizer'
 import { RightPanel } from './components/RightPanel'
+import { PublishDialog } from './components/PublishDialog'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { StatusBar } from './components/StatusBar'
 import { Timeline } from './components/Timeline'
@@ -71,6 +72,7 @@ export default function App() {
         {preview ? null : <StatusBar />}
         <CommandPalette />
         <ShortcutsDialog />
+        <PublishDialog />
       </div>
     </EditorDnd>
   )

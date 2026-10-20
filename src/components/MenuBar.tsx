@@ -110,6 +110,7 @@ export function MenuBar() {
         { kind: 'action', label: t('project.import'), onSelect: io.importProject },
         { kind: 'action', label: t('project.export'), onSelect: io.exportProject },
         { kind: 'action', label: t('project.exportSite'), onSelect: () => void io.exportSite() },
+        { kind: 'action', label: t('project.publish'), onSelect: () => void io.publishSite() },
       ],
     },
     {
@@ -349,7 +350,7 @@ export function MenuBar() {
         <button
           type="button"
           className="rounded border border-blue-600 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
-          onClick={() => void io.exportSite()}
+          onClick={() => void io.publishSite()}
         >
           {t('header.publish')}
         </button>

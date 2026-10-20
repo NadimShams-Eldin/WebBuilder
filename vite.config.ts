@@ -5,6 +5,11 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    host: true,
+    allowedHosts: ['.monkeycode-ai.live'],
+  },
+  preview: {
+    host: true,
     allowedHosts: ['.monkeycode-ai.live'],
   },
 })

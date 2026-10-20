@@ -155,6 +155,13 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
         keywords: ['export', 'zip', 'site', 'html'],
         run: () => void io.exportSite(),
       },
+      {
+        id: 'project:publish',
+        label: t('command.publish'),
+        group: t('palette.group.project'),
+        keywords: ['publish', 'share', 'link', 'نشر'],
+        run: () => void io.publishSite(),
+      },
     ]
 
     const workspaceCommands: Command[] = [

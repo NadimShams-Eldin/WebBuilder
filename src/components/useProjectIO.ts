@@ -16,6 +16,7 @@ export function useProjectIO() {
   const project = useEditorStore((s) => s.project)
   const exportProjectJson = useEditorStore((s) => s.exportProjectJson)
   const exportSiteZip = useEditorStore((s) => s.exportSiteZip)
+  const publishSite = useEditorStore((s) => s.publishSite)
   const importProjectJson = useEditorStore((s) => s.importProjectJson)
 
   return useMemo(
@@ -33,7 +34,8 @@ export function useProjectIO() {
       },
       exportProject: () => downloadJson(projectFileName(project), exportProjectJson()),
       exportSite: async () => exportSiteZip(),
+      publishSite: async () => publishSite(),
     }),
-    [project, exportProjectJson, exportSiteZip, importProjectJson],
+    [project, exportProjectJson, exportSiteZip, publishSite, importProjectJson],
   )
 }
